@@ -1,0 +1,7 @@
+{OPTICAL SCATTERING LAW {{ law_no }}}
+ {{ optical_law.type | fmt(" >15")}} {type}
+ {{ optical_law.freeze_state.R  }}    {{ optical_law.R | fmt("10.6f") }} {R}
+ {{ optical_law.freeze_state.wt }}    {{ optical_law.wt | fmt("10.6f") }} {wt}
+ {{ optical_law.freeze_state.A0 }}    {{ optical_law.A0 | fmt("10.6f") }} {A0}
+ {{ optical_law.freeze_state.D  }}    {{ optical_law.D | fmt("10.6f") }} {D}
+ {{ optical_law.freeze_state.k  }}    {{ optical_law.k | fmt("10.6f") }} {k}

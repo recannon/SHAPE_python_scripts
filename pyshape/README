@@ -1,0 +1,12 @@
+Dependencies
+- Python
+- Matplotlib
+- Numpy
+- Scipy
+- Astropy
+- Astroquery
+- Trimesh
+- jinja2
+- rich
+[Optional]
+- cmasher (for pretty plots)

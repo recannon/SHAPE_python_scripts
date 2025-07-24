@@ -1,0 +1,51 @@
+=On errors=
+If you ever get an error that isn't a formal logging error (ERROR     | [error message]), let me know and I'll add in coverage for it.
+
+
+=Required file structure=
+
+-scan_dir/
+|-faction/          [slurm output and errors will go here]
+|-modfiles/         [modfiles stored here]
+|-obsfiles/         [obsfiles stored here]
+|-logfiles/         [logfiles will be written here from launch_fitting.sbatch]
+|-waction/          [temporary files for write actions saved here]
+||-logs/            [logs of write_fit calling mpar and wpar are saved here]
+|-par/              [location of par files, named wpar, mpar, fpar etc]
+|-namecores.txt     [names of all files (saved in mod/obsfiles) launch_fitting should run]
+
+
+==Python scripts==
+change_obs_weights.py
+ - Changes the weights of specified (by type and number) data sets to given value
+freeze_mod.py
+ - Changes the freeze state of specified components/parameters to given value
+grid_scan.py
+ - Runs a 2-D grid scan of specified parameters
+line_scan.py
+ - Runs a 1-D grid scan of specified parameter
+write_fit.py
+ - Creates a pdf with the orthogonal views of a model and its fits to all relevant data types
+
+==Bash scripts==
+launch_fitting.sbatch
+ - Runs slurm array job for every mod/obs combo specified in namecores.txt
+ - If given positional argument (for angle2) will assume its a polescan and run fits in ./subscans/[angle2]. (Will assume directories exist. These are created by grid_scan)
+bash_scripts/create_pdf.sh
+ - Used by write_fit.py, no need to run by itself
+bash_scripts/tri2mod.sh
+ - WIP, might not work in certain scenarios. Goes through the process of turning a convex inversion trimod file to a shape mod file
+bash_scripts/ConvInvSol_mkvertmod.sh
+ - Needs updating and renaming but it works
+ - Run in directory, will apply either mkvertmod or mkhardmod with specified parameters to all files in ./modfiles/
+
+==Notebooks==
+Combine_polescans.ipynb
+ - For use after a grid_scan --angle2-range. Will combine all grid scans in ./subscans/*, taking the best value for each pole solution and saving to specified directory
+ - Can also be used for combinging low/high res scans etc
+Gen_Linescan.opynb
+ - Plots the result of a line scan
+Gen_Polescan.ipynb
+ - Plots the result of a grid_scan (for polescans, but should work, with quirks, for other grid scans)
+Rank_Polescan.ipynb
+ - For when you are down to a few models, will rank all of the logfiles by the reduced chisquared values.

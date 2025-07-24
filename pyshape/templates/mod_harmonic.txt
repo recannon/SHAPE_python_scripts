@@ -1,0 +1,15 @@
+{COMPONENT {{ comp_no }}}
+ {{ component.freeze_state.linoff0 }} {{ component.linoff0 | fmt(" 10.6e") }} {linear offset 0}
+ {{ component.freeze_state.linoff1 }} {{ component.linoff1 | fmt(" 10.6e") }} {linear offset 1}
+ {{ component.freeze_state.linoff2 }} {{ component.linoff2 | fmt(" 10.6e") }} {linear offset 2}
+ {{ component.freeze_state.linoff0 }} {{ component.rotoff0 | fmt(" 10.6e") }} {rotational offset 0}
+ {{ component.freeze_state.rotoff1 }} {{ component.rotoff1 | fmt(" 10.6e") }} {rotational offset 1}
+ {{ component.freeze_state.rotoff2 }} {{ component.rotoff2 | fmt(" 10.6e") }} {rotational offset 2}
+        harmonic {component type}
+ {{ component.degree | fmt(" >15") }} {number of harmonics}
+ {{ component.freeze_state.scale0 }} {{ component.scale0 | fmt(" 10.6e") }} {scale factor 0}
+ {{ component.freeze_state.scale1 }} {{ component.scale1 | fmt(" 10.6e") }} {scale factor 1}
+ {{ component.freeze_state.scale2 }} {{ component.scale2 | fmt(" 10.6e") }} {scale factor 2}
+{% for freeze, coeff in zip(component.freeze_state.coeffs, component.coeffs) -%}
+{{ freeze | fmt(" >2") }} {{ coeff | fmt(" 13.6e") }}
+{% endfor %}              {{ component.theta }} {number of theta steps}
