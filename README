@@ -1,6 +1,18 @@
 =On errors=
-If you ever get an error that isn't a formal logging error (ERROR     | [error message]), let me know and I'll add in coverage for it.
+If you ever get an error that isn't a formal logging error (ERROR     | [error message]), let me know and I'll fix it/add in error coverage for it.
 
+Dependencies
+- Python
+- Matplotlib
+- Numpy
+- Scipy
+- Astropy
+- Astroquery
+- Trimesh
+- jinja2
+- rich
+[Optional]
+- cmasher (for pretty plots)
 
 =Required file structure=
 
@@ -16,16 +28,19 @@ If you ever get an error that isn't a formal logging error (ERROR     | [error m
 
 
 ==Python scripts==
-change_obs_weights.py
+change_weights.py
  - Changes the weights of specified (by type and number) data sets to given value
 freeze_mod.py
  - Changes the freeze state of specified components/parameters to given value
+convert_mod_type.py
+ - Applies mkvertmod or mkharmod. Can shuffle vertices if required.
 grid_scan.py
  - Runs a 2-D grid scan of specified parameters
 line_scan.py
  - Runs a 1-D grid scan of specified parameter
 write_fit.py
  - Creates a pdf with the orthogonal views of a model and its fits to all relevant data types
+
 
 ==Bash scripts==
 launch_fitting.sbatch
@@ -35,9 +50,6 @@ bash_scripts/create_pdf.sh
  - Used by write_fit.py, no need to run by itself
 bash_scripts/tri2mod.sh
  - WIP, might not work in certain scenarios. Goes through the process of turning a convex inversion trimod file to a shape mod file
-bash_scripts/ConvInvSol_mkvertmod.sh
- - Needs updating and renaming but it works
- - Run in directory, will apply either mkvertmod or mkhardmod with specified parameters to all files in ./modfiles/
 
 ==Notebooks==
 Combine_polescans.ipynb
