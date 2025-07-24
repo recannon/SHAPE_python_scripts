@@ -110,14 +110,14 @@ def validate_args(args):
         if args.z_scan:
             error_exit('Cannot use --z-scan mode when specifying --param')
         #Check values are floats and min<max and step>0
-        args.param = check_param_vals(args.param,float)
+        args.param = check_scan_param_vals(args.param,float)
     
     #Else if z_scan
     elif args.z_scan:
 
         #Check values and set to param
         z_info = ['scale2',*args.z_scan]
-        args.param = check_param_vals(z_info,float)
+        args.param = check_scan_param_vals(z_info,float)
 
         if args.param.min <= 0:
             error_exit('Minimum z-scale value must be greater than 0')

@@ -186,8 +186,8 @@ def validate_args(args):
         if args.angle2_range or args.angle2:
             error_exit('Cannot use --angle2 or --angle2-range outside of --polescan mode')
         
-        args.param1 = check_param_vals(args.param1,float)
-        args.param2 = check_param_vals(args.param2,float)
+        args.param1 = check_scan_param_vals(args.param1,float)
+        args.param2 = check_scan_param_vals(args.param2,float)
 
 
     #Else if polescan is used:
@@ -200,7 +200,7 @@ def validate_args(args):
                 error_exit("Use only one of --angle2 or --angle2-range.")
             #Check vals
             a2_info = ['angle2-range',*args.angle2_range]
-            args.angle2_range = check_param_vals(a2_info,int)
+            args.angle2_range = check_scan_param_vals(a2_info,int)
         #Elif angle2 is not called
         elif args.angle2 is None:
             args.angle2 = 0
@@ -208,8 +208,8 @@ def validate_args(args):
         #Check polescan vals and set to param1 and param2
         bet_info = ['bet',*args.polescan[:3]]
         lam_info = ['lam',*args.polescan[3:]]
-        args.param1 = check_param_vals(bet_info, int)
-        args.param2 = check_param_vals(lam_info, int)
+        args.param1 = check_scan_param_vals(bet_info, int)
+        args.param2 = check_scan_param_vals(lam_info, int)
 
         #Ranges of lam and bet
         if args.param1.min < -90 or args.param1.max > 90:
