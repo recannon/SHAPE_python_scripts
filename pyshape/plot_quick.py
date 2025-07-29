@@ -3,7 +3,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from . import polescan
-import glob
+from astropy.stats import sigma_clip
 
 def pq_polescan(bet,lam,chi, maxlevel=1.5,betstep=1,lamstep=1,lines=[],cmp='magma'):
 
@@ -85,7 +85,7 @@ def pq_lightcurves(fit_files,no_cols=3,show=True,save=False):
 
     return 1
 
-def pq_doppler(fit_files,no_cols=2,show=True,save=False):
+def pq_doppler(fit_files,no_cols=2,sigma_threshold=5,show=True,save=False):
 
     # A4 size in inches: 11.7 x 8.3 (landscape)
     A4_WIDTH = 11.7
@@ -104,9 +104,20 @@ def pq_doppler(fit_files,no_cols=2,show=True,save=False):
         axs[i].plot(bins, obs_data, 'ro')
         axs[i].plot(bins, fit_data, 'k-')
         axs[i].set_title(f'{" ".join(fit_files[i].split("_")[-2:])}')
-        if len(bins)>100:
-            mid_bin = len(bins)//2 + int(len(bins)%2 != 0)
-            axs[i].set_xlim(left=mid_bin-50,right=mid_bin+50)
+        
+        signal_thresh = sigma_threshold * sigma_clip(obs_data, sigma=3, maxiters=5).std()
+        signal_mask = obs_data > signal_thresh
+
+        if np.any(signal_mask):
+            signal_bins = bins[signal_mask]
+            min_bin = signal_bins.min()
+            max_bin = signal_bins.max()
+            
+            margin = 10
+            axs[i].set_xlim(min_bin - margin, max_bin + margin)
+        else:
+            axs[i].set_xlim(bins[0], bins[-1])  #plots everything if no signal
+        
 
     #Hide unused plots
     for j in range(n_plots, len(axs)):

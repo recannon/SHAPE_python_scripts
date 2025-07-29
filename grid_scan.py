@@ -43,7 +43,7 @@ def grid_scan_setup(p1,p2,mod_template,obs_template,outf,angle2=0):
     param_owner_indices = []
     for param in param_names:
         param_owner_index = None
-        variable_mods = [components[0], spin_state]
+        variable_mods = [*components, spin_state]
         for i, dclass in enumerate(variable_mods):
             
             #Often the useful values are stored as properties, rather than fields (in spin state atleast)
@@ -77,12 +77,12 @@ def grid_scan_setup(p1,p2,mod_template,obs_template,outf,angle2=0):
             
             #Adjust angle 2
             if polescan:
-                setattr(variable_mods[1], 'angle2', angle2)
-                setattr(variable_mods[1].freeze_state, 'angle2', 'f')
+                setattr(variable_mods[-1], 'angle2', angle2)
+                setattr(variable_mods[-1].freeze_state, 'angle2', 'f')
 
             new_ModFile = mod_file.ModFile(
-                components=[variable_mods[0]],
-                spin_state=variable_mods[1],
+                components=variable_mods[:-1],
+                spin_state=variable_mods[-1],
                 optical_laws=optical_laws,
                 radar_laws=radar_laws)
             

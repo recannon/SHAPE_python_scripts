@@ -11,7 +11,7 @@ import glob
 import argparse
 from pathlib import Path
 
-def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='./',no_cols=3,res=False):
+def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.',no_cols=3,res=False):
     """
     Run shape model fitting and post-processing.
 
@@ -39,21 +39,27 @@ def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='./
     if not Path('waction/logs').is_dir():
         error_exit('Cannot find ./waction/logs directory')
 
-    #Empty waction and logs folder without trying to remove directories
+    #Empty waction folder without trying to remove directories
     subprocess.run('find waction/ -maxdepth 1 -type f -exec rm {} +', shell=True, check=True)
 
     #Run moments with shape
     logger.info('Running moments')
     logger.debug(f'shape {mparfile} {modfile} {obsfile}')
     with open(f'waction/logs/{identifier}.mpar.log', 'w') as log:
-        subprocess.run(["shape", str(mparfile), str(modfile), str(obsfile)], cwd="waction", stdout=log, check=True)
+        try:
+            subprocess.run(["shape", str(mparfile), str(modfile), str(obsfile)], cwd="waction", stdout=log, check=True)
+        except:
+            error_exit(f'Problem running moments action. Check {log.name}')
 
     #Run write with shape
     logger.info('Running write')
     logger.debug(f"shape {wparfile} {modfile} {obsfile}")
     with open(f'waction/logs/{identifier}.wpar.log', 'w') as log:
-        subprocess.run(["shape", str(wparfile), str(modfile), str(obsfile)], cwd="waction", stdout=log, check=True)
-    
+        try:
+            subprocess.run(["shape", str(wparfile), str(modfile), str(obsfile)], cwd="waction", stdout=log, check=True)
+        except:
+            error_exit(f'Problem running write action. Check {log.name}')
+
     #Collage mpar figures
     logger.info('Creating jpgs')
     pos_files = sorted(glob.glob(f'{current_path}/waction/*pos.ppm'))
@@ -66,20 +72,21 @@ def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='./
 
     #Read obsfile to check for which data types are present
     obs_sets  = obs_file.read(obsfile)
-    set_types = np.unique([set.type for set in obs_sets])
+    set_types = set([set.type for set in obs_sets])
     
-    #Delay-doppler requires stacking of ppm images
-    if 'delay-doppler' in set_types:            
+    #delay-Doppler requires stacking of pgm images
+    if 'delay-doppler' in set_types:
         
-        obs_frames = sorted(glob.glob(f'{current_path}/waction/obs*.pgm'))
-        fit_frames = sorted(glob.glob(f'{current_path}/waction/fit*.pgm'))
-        res_frames = sorted(glob.glob(f'{current_path}/waction/res*.pgm'))
+        obs_frames = sorted(glob.glob(f'{current_path}/waction/obs_*.pgm'))
+        fit_frames = sorted(glob.glob(f'{current_path}/waction/fit_*.pgm'))
+        res_frames = sorted(glob.glob(f'{current_path}/waction/res_*.pgm'))
         sky_frames = [name.replace('obs_','sky_').replace('.pgm','.ppm') for name in obs_frames]
         temp_frames = [name.replace('sky_','temp_') for name in sky_frames]
         no_frames  = len(temp_frames)
         no_rows    = no_frames//no_cols + int(no_frames % no_cols != 0)
 
         with open(f'{current_path}/waction/dd_stack.sh','w') as f:
+            
             for i in range(len(temp_frames)):
                 parts = [obs_frames[i], fit_frames[i]]
                 if res:
@@ -115,6 +122,10 @@ def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='./
     output_name = f'{outdir}/{identifier}.pdf'
     script_dir = Path(__file__).resolve().parent
     subprocess.run(["bash", script_dir / "bash_scripts/create_pdf.sh", output_name, *map(str, jpg_files)], check=True)
+    
+    #Empty waction folder without trying to remove directories
+    subprocess.run('find waction/ -maxdepth 1 -type f -exec rm {} +', shell=True, check=True)
+
     return True
 
 def process_file(modfile, obsfile, args):
@@ -148,7 +159,7 @@ def parse_args():
                             help="Include residuals in dd fit")
     parser.add_argument("--all", action="store_true",
                         help="Run write_fit for all files in namecores.txt")
-    parser.add_argument("-o",'--outdir', type=str, default='./',
+    parser.add_argument("-o",'--outdir', type=str, default='.',
                         help="Directory to save fits. Default cwd")
     return parser.parse_args()
 
@@ -178,8 +189,8 @@ def main():
 
         try: #Try turn into integers. If your files are integer names it is a bit silly
             lat,lon = int(args.modfile), int(args.obsfile)
-            modfile = f"./modfiles/lat{lat}lon{lon}.mod"
-            obsfile = f"./obsfiles/lat{lat}lon{lon}.obs"
+            modfile = f"./modfiles/lat{lat:+03d}lon{lon:03d}.mod"
+            obsfile = f"./obsfiles/lat{lat:+03d}lon{lon:03d}.obs"
             logger.info('Super secret polescan mode activated')
         except:
             modfile = args.modfile

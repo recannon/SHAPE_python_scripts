@@ -120,7 +120,7 @@ def freeze_mod(fname, mod_type, freeze, components=[]):
     f.writelines(file_lines)
     f.close()
 
-    print('Done')
+    logger.debug('Done')
     return 1
 
 

@@ -10,4 +10,3 @@
  {{ component.freeze_state.ab  }} {{ component.ab  | fmt(" 13.6f") }} {a/b}
  {{ component.freeze_state.bc  }} {{ component.bc  | fmt(" 13.6f") }} {b/c}
               {{ component.theta }} {number of theta steps}
-              
