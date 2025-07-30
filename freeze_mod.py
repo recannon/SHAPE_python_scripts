@@ -1,8 +1,11 @@
-#Last modified 14/05/2025
+#Last modified 11/07/2025
 
 import argparse
 import glob
+import logging
 from pathlib import Path
+from pyshape import mod_file
+from pyshape.outfmt import logger, error_exit
 
 def freeze_mod(fname, mod_type, freeze, components=[]):
     '''
@@ -30,7 +33,7 @@ def freeze_mod(fname, mod_type, freeze, components=[]):
     if type(components) != list:
         raise TypeError('components argument must be given as a list')
 
-    print(f'{fname} : Replacing {change[freeze]}with {change[-freeze]}')
+    logger.debug(f'{fname} : Replacing {change[freeze]}with {change[-freeze]}')
 
     # Open File
     f = open(fname,'r')
@@ -49,7 +52,7 @@ def freeze_mod(fname, mod_type, freeze, components=[]):
         
         #Loop through each elip.
         for elip in components:
-            print(f'Component {elip}')
+            logger.debug(f'Component {elip}')
             start_ind = 4 + (elip*12)
             final_ind = 16 + (elip*12)
             file_lines[start_ind:final_ind] = [line.replace(change[freeze],change[-freeze]) for line in file_lines[start_ind:final_ind]]
@@ -62,7 +65,7 @@ def freeze_mod(fname, mod_type, freeze, components=[]):
             raise ValueError('Cannot change a vertex model with more than 1 component')
 
         no_vertex = int(file_lines[12].split()[0])
-        print(f'{no_vertex} vertices')
+        logger.debug(f'{no_vertex} vertices')
 
         file_lines[13:17+(2*no_vertex)] = [line.replace(change[freeze],change[-freeze]) for line in file_lines[13:17+(2*no_vertex)]]
 
@@ -80,7 +83,7 @@ def freeze_mod(fname, mod_type, freeze, components=[]):
         #Loop through each elip.
         lines = [l.strip() for l in file_lines]
         for i in components:
-            print(f'Component {i}')
+            logger.debug(f'Component {i}')
             start_ind = int(lines.index(f'{{COMPONENT {i}}}'))
             no_harmonics = int(lines[start_ind+8].split()[0])
             final_ind = start_ind+11+int((no_harmonics+1)**2)+1
@@ -117,13 +120,16 @@ def freeze_mod(fname, mod_type, freeze, components=[]):
     f.writelines(file_lines)
     f.close()
 
-    print('Done')
+    logger.debug('Done')
     return 1
 
 
-
-def main():
+#===Functions for parsing args below this point===
+def parse_args():
+    """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Freeze or unfreeze all variable factors of listed components in a modfile.")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Enable verbose output (sets log level to DEBUG)")
 
     #Beta and lambda ranges and steps
     parser.add_argument("fname",    type=str, help="Name of file to affect. If directory, will affect all .mod files in directory")
@@ -133,18 +139,37 @@ def main():
     parser.add_argument("-c", "--components", nargs='+', type=int, default=[],
                         help="Optional list of components to affect (ellipse only)")
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    print(args)
+def validate_args(args):
+    
+    #Check verbose
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+        logger.debug('Verbose: Set level to DEBUG')
+
+    if args.mod_type not in ['e','v','h','s','p']:
+        error_exit('Cannot understand input mod_type. Check documentation for valid inputs')
+
+    return args
+
+#===Main===
+def main():
+
+    args = parse_args()
+    args = validate_args(args)
 
     if Path(args.fname).is_file():
+        logger.info(f'Running script on file {args.fname}')
         freeze_mod(*vars(args).values())
     elif Path(args.fname).is_dir():
+        logger.info(f'Running script on directory {args.fname}/*.mod')
         modfiles = glob.glob(f'{args.fname}/*.mod')
         for mod in modfiles:
             freeze_mod(mod,args.mod_type,args.freeze,args.components)
     else:
-        raise FileNotFoundError('Cannot find file or directory with name [fname]')
+        raise error_exit('Cannot find file or directory with name [fname]')
+
 
 if __name__ == "__main__":
     main()

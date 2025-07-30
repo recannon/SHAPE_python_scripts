@@ -4,14 +4,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from . import polescan
 from astropy.stats import sigma_clip
+from .outfmt import logger
 
-def pq_polescan(bet,lam,chi, maxlevel=1.5,betstep=1,lamstep=1,lines=[],cmp='magma'):
+def pq_polescan(bet,lam,chi, maxlevel=1.5,betstep=1,lamstep=1,lines=[],cmp='magma',save=False,show=True):
 
     #Create 1x1 meshgrid of poles
     betall,lamall,chiall = polescan.interpolate_chi(bet,lam,chi,betstep,lamstep)
 
     minchi = np.nanmin(chiall)
-    print(minchi)
+    logger.debug(f'Minimum chisqr is {minchi}')
 
     fig, ax = plt.subplots(figsize=(12, 6))
     col_contours = np.arange(minchi, minchi * maxlevel,
@@ -35,16 +36,20 @@ def pq_polescan(bet,lam,chi, maxlevel=1.5,betstep=1,lamstep=1,lines=[],cmp='magm
     ax.set_yticks(np.arange(-90, 91, 30))
     ax.set_xlabel("Longitude", fontsize=20)
     ax.set_ylabel("Latitude", fontsize=20)
-    ax.set_xlim(0, 360)
-    ax.set_ylim(-90, 90)
+    ax.set_xlim(np.min(lam), np.max(lam))
+    ax.set_ylim(np.min(bet), np.max(bet))
     ax.set_title(f'({bet[np.nanargmin(chi)]}, {lam[np.nanargmin(chi)]}) : {minchi}', fontsize=30)
 
     cbar = fig.colorbar(cf, ax=ax)
     cbar.ax.tick_params(labelsize=16, labelleft=True,
                         labelright=False, left=True, right=False)
     cbar.set_label('Reduced chi-squared', rotation=270, fontsize=18, labelpad=20)
-
-    plt.show()
+    if show:
+        logger.debug(f'Displaying polescan')
+        plt.show()
+    if save:
+        logger.debug(f'Saving polescan to {save}')
+        plt.savefig(save)
     plt.close()
 
     return 1

@@ -5,24 +5,28 @@ import numpy as np
 import glob
 import shutil
 from scipy.interpolate import griddata
+from .outfmt import logger,error_exit
 
 def results(scan_dir):
 
-    #First check jobs finished
-    faction_path = f'{scan_dir}/faction/job_output*'
-    faction_files = sorted(glob.glob(faction_path))
-    # print(f'Found {len(faction_path)} faction files')
-    for fac in faction_files:
-        f = open(fac,'r')
-        lines = [l.strip().split() for l in f.readlines()]
-        f.close()
-        if lines[-1][0] != 'Done':
-            print(f'Warning: {fac} not completed. {lines[-2][3]}')
+    # #First check jobs finished
+    # faction_path = f'{scan_dir}/faction/job_output*'
+    # faction_files = sorted(glob.glob(faction_path))
+    # # print(f'Found {len(faction_path)} faction files')
+    # for fac in faction_files:
+    #     f = open(fac,'r')
+    #     lines = [l.strip().split() for l in f.readlines()]
+    #     f.close()
+    #     if lines[-1][0] != 'Done':
+    #         logger.warning(f'Warning: {fac} not completed. {lines[-2][3]}')
 
 
-    log_file_path = f'{scan_dir}/logfiles/lat*.log'
+    log_file_path = f'{scan_dir}/lat*.log'
     log_files = sorted(glob.glob(log_file_path))
-    print(f'Found {len(log_files)} log files')
+    if len(log_files) == 0:
+        error_exit(f'Could not find any polescan log files (format lat*.log)')
+    else:
+        logger.debug(f'Found {len(log_files)} log files')
 
 
     chi,bet,lam = [],[],[]

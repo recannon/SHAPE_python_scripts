@@ -2,6 +2,7 @@ import sys
 from astropy.time import Time
 from .outfmt import logger,error_exit
 import dataclasses
+from pathlib import Path
 
 #===Shape time formatting for mod/obs files
 def time_shape2astropy(t: str) -> Time:
@@ -44,4 +45,19 @@ def check_no_files(no_files):
         logger.info("Aborting.")
         exit(0)
 
+#===Other helper functions for parsing arguments
+def check_type(par,par_name,req_type):
+    try:
+        return req_type(par)
+    except:
+        error_exit(f"{par_name} must be of type {req_type.__name__} (got '{arg_str}')")
 
+def check_dir(path, must_exist=True):
+    """Convert to Path and check it's a directory (if required)."""
+    path = Path(path)
+    if must_exist:
+        if not path.exists():
+            error_exit(f"Directory does not exist: {path}")
+        if not path.is_dir():
+            error_exit(f"Not a directory: {path}")
+    return path
