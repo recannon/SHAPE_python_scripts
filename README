@@ -41,7 +41,6 @@ line_scan.py
 write_fit.py
  - Creates a pdf with the orthogonal views of a model and its fits to all relevant data types
 
-
 ==Bash scripts==
 launch_fitting.sbatch
  - Runs slurm array job for every mod/obs combo specified in namecores.txt

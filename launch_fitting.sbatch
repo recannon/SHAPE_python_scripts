@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=SHAPE
+#SBATCH --job-name=Soz_guys
 #SBATCH --time=36:00:00               # Time limit in the format hr:min:sec​
 #SBATCH --output=./faction/job_output_%j.log    # Output file (with job ID in the filename)​
 #SBATCH --error=./faction/job_error_%j.log      # Error file (with job ID in the filename)​

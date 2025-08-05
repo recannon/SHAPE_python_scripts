@@ -7,6 +7,10 @@ from pathlib import Path
 import numpy as np
 import cmasher as cmr
 
+#Code for combining and/or plotting polescan results into a jpg file. E.g.
+#python -m ps_analysis --combine --subscan
+#python -m ps_analysis --plot [--fig-name FIGNAME] [--max-level MAXLVL] [--lines L1 L2 L3]
+#python -m ps_analysis --combine --dirs DIR1 DIR2 [DIR3...] --out-dir OUTDIR
 
 def plot_polescan(dirname,fig_name,maxlevel,lines):
     logger.debug(f'Scanning files in {dirname}')
@@ -23,6 +27,9 @@ def plot_polescan(dirname,fig_name,maxlevel,lines):
 
 def combine_polescan(ps_dirs,out_dir,plot=False,plot_args=None):
     
+    
+    logger.debug(f'Combining polescans from {ps_dirs}')
+
     bet,lam,chi,loc = polescan.combine(ps_dirs,out_dir)
 
     if plot:
@@ -44,7 +51,7 @@ def parse_args():
     plot_group.add_argument('-p','--plot', action='store_true',
                             help='Will look for other plotting arguemnts')
     plot_group.add_argument('--dirname', type=str,
-                            help='Directory of logfiles of the polescan. Defaults to ./logfiles')
+                            help='Directory of logfiles of the polescan. Defaults to cwd')
     plot_group.add_argument('--fig-name', type=str,
                             help="Specify name of output jpg file. Defaults to polescan.jpg")
     plot_group.add_argument('--max-level', type=str,
@@ -74,9 +81,9 @@ def validate_args(args):
 
     #Check combine mode
     if args.combine:
-        needs_output = not args.plot and not args.out_dir
+        needs_output = not args.plot and not (args.out_dir or args.subscan)
         if needs_output:
-            error_exit('Provide either plot (and plotting args) or out_dir when combining polescans')
+            error_exit('Provide either plot (and plotting args) or out_dir/subscan when combining polescans')
 
         if args.subscan:
             if args.dirs:
@@ -101,7 +108,7 @@ def validate_args(args):
         
         #Check directory exists and has files in
         if not args.dirname:
-            args.dirname = './logfiles'
+            args.dirname = '.'
         args.dirname = check_dir(args.dirname)
         no_files = len([f for f in args.dirname.iterdir() if f.is_file()])
         if no_files == 0:
@@ -128,6 +135,9 @@ def main():
 
     if args.plot:
         plot_polescan(args.dirname,args.fig_name,args.max_level,args.lines)
+
+    if args.combine:
+        combine_polescan(args.dirs,args.out_dir,args.plot,[args.fig_name,args.max_level,args.lines])
 
 
 if __name__ == "__main__":

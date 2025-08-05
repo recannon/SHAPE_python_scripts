@@ -21,10 +21,10 @@ def results(scan_dir):
     #         logger.warning(f'Warning: {fac} not completed. {lines[-2][3]}')
 
 
-    log_file_path = f'{scan_dir}/lat*.log'
+    log_file_path = f'{scan_dir}/logfiles/lat*.log'
     log_files = sorted(glob.glob(log_file_path))
     if len(log_files) == 0:
-        error_exit(f'Could not find any polescan log files (format lat*.log)')
+        error_exit(f'Could not find any polescan log files ({log_file_path})')
     else:
         logger.debug(f'Found {len(log_files)} log files')
 

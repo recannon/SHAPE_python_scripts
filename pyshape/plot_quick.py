@@ -72,7 +72,7 @@ def pq_lightcurves(fit_files,no_cols=3,show=True,save=False):
 
         axs[i].plot(d_jd, d_mag, 'ro')
         axs[i].plot(d_jd, p_mag, 'k-')
-        axs[i].set_title(f'{fit_files[i].split("_")[-1]}')
+        axs[i].set_title(f'{str(fit_files[i]).split("_")[-1]}')
         axs[i].invert_yaxis()
 
     #Hide unused plots
@@ -108,7 +108,7 @@ def pq_doppler(fit_files,no_cols=2,sigma_threshold=5,show=True,save=False):
 
         axs[i].plot(bins, obs_data, 'ro')
         axs[i].plot(bins, fit_data, 'k-')
-        axs[i].set_title(f'{" ".join(fit_files[i].split("_")[-2:])}')
+        axs[i].set_title(f'{" ".join(str(fit_files[i]).split("_")[-2:])}')
         
         signal_thresh = sigma_threshold * sigma_clip(obs_data, sigma=3, maxiters=5).std()
         signal_mask = obs_data > signal_thresh
