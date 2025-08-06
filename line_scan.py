@@ -12,6 +12,10 @@ from pyshape import mod_file
 from pyshape.outfmt import logger, error_exit
 from pyshape.utils import check_scan_param_vals, check_no_files
 
+#python -m line_scan -z 0.9 1.1 0.02
+#non polescan line searches are untested but should work. Let me know if not
+
+
 def line_scan_setup(p,mod_template,obs_template,outf):
 
     mod_info = mod_file.read(mod_template)

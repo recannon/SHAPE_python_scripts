@@ -25,6 +25,7 @@ def plot_polescan(dirname,fig_name,maxlevel,lines):
                         lines=lines,cmp='cmr.sunburst',show=False,save=fig_name)
     return True
 
+
 def combine_polescan(ps_dirs,out_dir,plot=False,plot_args=None):
     
     
@@ -38,6 +39,7 @@ def combine_polescan(ps_dirs,out_dir,plot=False,plot_args=None):
                         maxlevel=maxlevel,lamstep=1,betstep=1,
                         lines=lines,cmp='cmr.sunburst',show=False,save=fig_name)
     return True
+    
     
 #===Functions for parsing args below this point===
 def parse_args():
@@ -58,7 +60,7 @@ def parse_args():
                             help='Multiple of minimum chisqr that appears coloured on plot. Default 1.1')
     plot_group.add_argument('--lines', nargs='*', type=float, default=None,
                             help='Additional contours to plot as percentages above minimum chi-sqr. e.g., --lines 1 2.5 5')
-
+    
     #Combine args
     combine_group = parser.add_argument_group('Arguments for combining multiple polescans. To plot combined scan, call --plot as well')
     combine_group.add_argument('-c','--combine',action='store_true',
@@ -69,8 +71,9 @@ def parse_args():
                                help='List of paths to polescans to be combined. Not required if using --subscans')
     combine_group.add_argument('--out-dir',type=str,
                                help='Out directory to save combined results. Not required if using --subscans or also calling --plot')
-
+    
     return parser.parse_args()
+
 
 def validate_args(args):
     
@@ -126,6 +129,7 @@ def validate_args(args):
             args.lines = [1.0, 2.5, 5.0]
 
     return args
+
 
 #===Main===
 def main():

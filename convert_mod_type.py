@@ -7,6 +7,10 @@ import glob
 import subprocess
 from pyshape import mod_file
 
+#python -m convert_mod_type modfiles -vmod 500 n 
+#python -m convert_mod_type test.mod -hmod 5 30 
+#For what the arguments after -hmod and -vmod mean, run mkvertmod or mkharmod in terminal with no arguments 
+
 def convert_mod_type(fname,command_info,shuffle):
 
     command, *command_args = command_info

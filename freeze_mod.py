@@ -7,6 +7,9 @@ from pathlib import Path
 from pyshape import mod_file
 from pyshape.outfmt import logger, error_exit
 
+#python -m freeze_mod modfiles v 1
+#python -m freeze_mod test.mod e 0 1
+
 def freeze_mod(fname, mod_type, freeze, components=[]):
     '''
     Takes modfile {fname} and freezes or unfreezes all variable factors for specified components. 

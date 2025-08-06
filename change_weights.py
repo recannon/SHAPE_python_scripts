@@ -5,6 +5,10 @@ import argparse
 from pathlib import Path
 import glob
 
+#python -m change_weights obsfiles cw 1e4 5 6 7
+#python -m change_weights obsfiles dd 0.5
+#python -m change_weights test.obs lc 100
+
 def change_weights(fname,obs_type,new_weights,sets_affected=[]):
 
     #Load obs file

@@ -5,6 +5,10 @@ from pathlib import Path
 import argparse
 import logging
 
+#python -m rank_fits
+#python -m rank_fits --dirname not_logfiles --top 10 --chi-type Doppler
+#chi-type must be one of ['ALLDATA','Doppler','delay','lghtcrv']
+
 def rank_fits(dirname:Path, top:int = 5, chi_type:str = 'ALLDATA'):
     
     log_files = sorted(dirname.glob('*'))
