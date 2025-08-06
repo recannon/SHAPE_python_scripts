@@ -2,7 +2,7 @@
 
 Python tools and bash utilities for interacting with the SHAPE asteroid/comet modeling software.
 
-## 📁 Required Directory Structure
+## Required Directory Structure
 
 Your working directory (`scan_dir/`) should follow the structure below:
 
@@ -19,15 +19,25 @@ scan_dir/
 
 ---
 
-## 📝 Notes
+## Notes
 
 - Some directories are created are scripts and some aren't, so best to make sure they all exist.
 - `namecores.txt` should contain base filenames (without extensions) for mod/obs pairs to run.
-- Documentation for python scripts can be with `python -m <script> -h` There is limited documentation in the code
 
 ---
 
-## 🔧 Dependencies
+## Documentation
+
+- Documentation for python scripts can be with `python -m <script> -h` There is limited documentation in the code, but example run commands at the top of every file
+- The other only frequently run script is launch_fitting.sbatch, which can be run as follows:
+```
+sbatch --array=1-{no_files} launch_fitting.sbatch [a2]
+```
+a2 will look to run the fit in directory ./subscans/[a2]. Otherwise it will run in CWD
+
+--
+
+## Dependencies
 
 - Python ≥ 3.8 and additional packages (`dependencies.txt`)
 - SHAPE modeling software

@@ -16,6 +16,8 @@ from pyshape.utils import check_scan_param_vals, check_no_files
 #python -m grid_scan -ps -90 90 10 0 360 10 -mod mod.h.template -obs obs.h.template
 #python -m grid_scan -ps -90 90 10 0 360 10 -a2r 0 355 5
 #non polescan grid searches are untested but should work. Let me know if not
+#This code (and everything handling mod files) is currently quite inefficient, so is on the list to be improved. 
+#But it works
 
 #===Pole/gridscan functions===
 def grid_scan_setup(p1,p2,mod_template,obs_template,outf,angle2=0):
