@@ -19,11 +19,11 @@ def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.'
     generates figures for the fit, and collates them into a PDF summary report.
 
     Parameters:
-        modfile (str | Path): Path to .mod file
-        obsfile (str | Path): Path to .obs file
-        mparfile (str | Path): Path to mpar parameter file
-        wparfile (str | Path): Path to wpar parameter file
-        no_cols (int): Number of columns for delay-doppler stacking
+        modfile (Path): Path to .mod file
+        obsfile (Path): Path to .obs file
+        mparfile (Path): Path to mpar parameter file
+        wparfile (Path): Path to wpar parameter file
+        no_cols  (int): Number of columns for delay-doppler stacking
         res (bool): Include residuals in output stacking
     """
 
@@ -157,7 +157,7 @@ def parse_args():
     return parser.parse_args()
 
 def validate_args(args):
-    
+    """Validate arguments"""
     #Check verbose
     if args.verbose:
         logger.setLevel(logging.DEBUG)
