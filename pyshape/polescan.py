@@ -24,7 +24,8 @@ def results(scan_dir):
     log_file_path = f'{scan_dir}/logfiles/lat*.log'
     log_files = sorted(glob.glob(log_file_path))
     if len(log_files) == 0:
-        error_exit(f'Could not find any polescan log files ({log_file_path})')
+        logger.warning(f'Could not find any polescan log files ({log_file_path})')
+        return [],[],[]
     else:
         logger.debug(f'Found {len(log_files)} log files')
 
@@ -35,14 +36,16 @@ def results(scan_dir):
             chi.append(log_file.read(f)['ALLDATA'])
         except:
             chi.append(np.nan)
+            logger.warning(f'Found NaN chisqr in {f}')
         bet.append(int(f[-13:-10]))
         lam.append(int(f[-7:-4]))
     chi,bet,lam = np.array(chi),np.array(bet),np.array(lam)
-
+    
     #Duplicate values across from 0 to 360 degrees, for interpolation to be more complete
     lam_new = np.ones(len(lam[lam==0]))*360
     bet_new = bet[lam==0]
     chi_new = chi[lam==0]
+    
     bet = np.concatenate([bet,bet_new])
     lam = np.concatenate([lam,lam_new])
     chi = np.concatenate([chi,chi_new])

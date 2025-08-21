@@ -28,16 +28,16 @@ def plot_polescan(dirname,fig_name,maxlevel,lines):
 
 def combine_polescan(ps_dirs,out_dir,plot=False,plot_args=None):
     
-    
     logger.debug(f'Combining polescans from {ps_dirs}')
 
     bet,lam,chi,loc = polescan.combine(ps_dirs,out_dir)
 
     if plot:
-        fig_name, maxlevel, lines = plot_args
-        plot_quick.pq_polescan(bet,lam,chi,
-                        maxlevel=maxlevel,lamstep=1,betstep=1,
-                        lines=lines,cmp='cmr.sunburst',show=False,save=fig_name)
+        import matplotlib.pyplot as plt
+        plt.figure()
+        plt.hist(loc)
+        plt.savefig('test.png')
+        
     return True
     
     
@@ -67,7 +67,7 @@ def parse_args():
                                help = 'Will look for other combine arguments')
     combine_group.add_argument('--subscan',action='store_true',
                                help='If toggled will combine all polescans in ./subscans into ./')
-    combine_group.add_argument('--dirs',nargs='?',default=None,
+    combine_group.add_argument('--dirs',nargs='+',default=None,
                                help='List of paths to polescans to be combined. Not required if using --subscans')
     combine_group.add_argument('--out-dir',type=str,
                                help='Out directory to save combined results. Not required if using --subscans or also calling --plot')

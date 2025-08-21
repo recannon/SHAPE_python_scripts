@@ -164,7 +164,7 @@ def main():
 
     if Path(args.fname).is_file():
         logger.info(f'Running script on file {args.fname}')
-        freeze_mod(*vars(args).values())
+        freeze_mod(args.fname,args.mod_type,args.freeze,args.components)
     elif Path(args.fname).is_dir():
         logger.info(f'Running script on directory {args.fname}/*.mod')
         modfiles = glob.glob(f'{args.fname}/*.mod')

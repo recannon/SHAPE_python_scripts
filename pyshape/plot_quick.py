@@ -11,6 +11,8 @@ def pq_polescan(bet,lam,chi, maxlevel=1.5,betstep=1,lamstep=1,lines=[],cmp='magm
     #Create 1x1 meshgrid of poles
     betall,lamall,chiall = polescan.interpolate_chi(bet,lam,chi,betstep,lamstep)
 
+    pole_mask = np.logical_or(bet==90, bet==-90)
+
     minchi = np.nanmin(chiall)
     logger.debug(f'Minimum chisqr is {minchi}')
 
@@ -19,7 +21,7 @@ def pq_polescan(bet,lam,chi, maxlevel=1.5,betstep=1,lamstep=1,lines=[],cmp='magm
                             (minchi * maxlevel - minchi) / 15)
 
     #Poles scanned
-    ax.plot(lam, bet, 'k.', alpha=0.5, markersize=1)
+    ax.plot(lam, bet, 'ko', markersize=1)#, alpha=0.5)
     #Interpolated colour map
     cf = ax.contourf(lamall, betall, chiall, levels=col_contours, cmap=cmp)
     #Optional line contours
@@ -36,7 +38,7 @@ def pq_polescan(bet,lam,chi, maxlevel=1.5,betstep=1,lamstep=1,lines=[],cmp='magm
     ax.set_yticks(np.arange(-90, 91, 30))
     ax.set_xlabel("Longitude", fontsize=20)
     ax.set_ylabel("Latitude", fontsize=20)
-    ax.set_xlim(np.min(lam), np.max(lam))
+    ax.set_xlim(np.min(lam[~pole_mask]), np.max(lam[~pole_mask]))
     ax.set_ylim(np.min(bet), np.max(bet))
     ax.set_title(f'({bet[np.nanargmin(chi)]}, {lam[np.nanargmin(chi)]}) : {minchi}', fontsize=30)
 
