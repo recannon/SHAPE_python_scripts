@@ -170,7 +170,9 @@ def validate_args(args):
     if not args.wparfile.is_file():
         error_exit(f'Cannot find given wparfile: {args.wparfile}')
     if not args.outdir.is_dir():
-        error_exit(f'Cannot find given output directory: {args.outdir}')
+        args.outdir.mkdir()
+        logger.debug(f'Created output directory {args.outdir}')
+        # error_exit(f'Cannot find given output directory: {args.outdir}')
 
     #If all, don't check modfile/obsfile
     if args.all:
@@ -179,7 +181,7 @@ def validate_args(args):
         if args.modfile or args.obsfile:
             logger.warning('Found modefile or obsfile provided with --all. Ignoring provided files')
 
-    elif not args.modfile and not args.obsfile:
+    elif not args.modfile or not args.obsfile:
         error_exit('Must provide both obsfile and modfile (or use --all)')
     
     else:

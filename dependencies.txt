@@ -8,3 +8,4 @@ Trimesh
 jinja2
 rich
 cmasher
+healpy

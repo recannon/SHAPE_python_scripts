@@ -14,7 +14,7 @@ import cmasher as cmr
 
 def plot_polescan(dirname,fig_name,maxlevel,lines):
     logger.debug(f'Scanning files in {dirname}')
-    bet,lam,chi = polescan.results(dirname)
+    bet,lam,chi,_,_ = polescan.results(dirname)
 
     bet,lam = bet[~np.isnan(chi)],lam[~np.isnan(chi)]
     chi = chi[~np.isnan(chi)]

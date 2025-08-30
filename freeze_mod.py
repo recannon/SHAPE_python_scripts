@@ -90,7 +90,7 @@ def freeze_mod(fname, mod_type, freeze, components=[]):
             start_ind = int(lines.index(f'{{COMPONENT {i}}}'))
             no_harmonics = int(lines[start_ind+8].split()[0])
             final_ind = start_ind+11+int((no_harmonics+1)**2)+1
-            file_lines[start_ind:start_ind+6] = [line.replace(change[freeze],change[-freeze]) for line in file_lines[start_ind:start_ind+6]]
+            file_lines[start_ind:start_ind+7] = [line.replace(change[freeze],change[-freeze]) for line in file_lines[start_ind:start_ind+7]]
             file_lines[start_ind+9:final_ind] = [line.replace(change[freeze],change[-freeze]) for line in file_lines[start_ind+9:final_ind]]
 
 

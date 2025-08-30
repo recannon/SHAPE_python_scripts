@@ -6,7 +6,8 @@ from . import polescan
 from astropy.stats import sigma_clip
 from .outfmt import logger
 
-def pq_polescan(bet,lam,chi, maxlevel=1.5,betstep=1,lamstep=1,lines=[],cmp='magma',save=False,show=True):
+def pq_polescan(bet,lam,chi,
+                maxlevel=1.5,betstep=1,lamstep=1,lines=[],cmp='magma',save=False,show=True):
 
     #Create 1x1 meshgrid of poles
     betall,lamall,chiall = polescan.interpolate_chi(bet,lam,chi,betstep,lamstep)
@@ -21,7 +22,7 @@ def pq_polescan(bet,lam,chi, maxlevel=1.5,betstep=1,lamstep=1,lines=[],cmp='magm
                             (minchi * maxlevel - minchi) / 15)
 
     #Poles scanned
-    ax.plot(lam, bet, 'ko', markersize=1)#, alpha=0.5)
+    ax.plot(lam, bet, 'go', markersize=1)#, alpha=0.5)
     #Interpolated colour map
     cf = ax.contourf(lamall, betall, chiall, levels=col_contours, cmap=cmp)
     #Optional line contours
@@ -30,6 +31,7 @@ def pq_polescan(bet,lam,chi, maxlevel=1.5,betstep=1,lamstep=1,lines=[],cmp='magm
         ax.contour(lamall, betall, chiall, colors='deepskyblue', 
                    linestyles=['solid', 'dashed', 'dotted'],
                    levels=lin_contours, linewidths=1)
+        
     #Minimum chisqr
     ax.plot(lam[np.nanargmin(chi)], bet[np.nanargmin(chi)], 'cd')
 

@@ -1,4 +1,4 @@
-#Last modified 14/05/2025
+#Last modified 26/08/2025
 
 def read(fname):
     
@@ -10,5 +10,8 @@ def read(fname):
     for l in lines[-30:]: 
         if not l[0].isnumeric() and l[0]!='WARNING:':
             chisqrs[f'{l[0]}'] = float(l[-1][:-1])
+            if l[0] == 'ALLDATA':
+                chisqrs['unreduced'] = float(l[3])
+                chisqrs['dof'] = float(l[5])
     return chisqrs
 

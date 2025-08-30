@@ -30,27 +30,36 @@ def results(scan_dir):
         logger.debug(f'Found {len(log_files)} log files')
 
 
-    chi,bet,lam = [],[],[]
+    chi,bet,lam,unreduced,dof = [],[],[],[],[]
     for f in log_files:
         try:
-            chi.append(log_file.read(f)['ALLDATA'])
+            log_info = log_file.read(f)
+            chi.append(log_info['ALLDATA'])
+            unreduced.append(log_info['unreduced'])
+            dof.append(log_info['dof'])
+            bet.append(int(f[-13:-10]))
+            lam.append(int(f[-7:-4]))
         except:
-            chi.append(np.nan)
+            # chi.append(np.nan)
             logger.warning(f'Found NaN chisqr in {f}')
-        bet.append(int(f[-13:-10]))
-        lam.append(int(f[-7:-4]))
+
     chi,bet,lam = np.array(chi),np.array(bet),np.array(lam)
+    unreduced,dof = np.array(unreduced),np.array(dof)
     
     #Duplicate values across from 0 to 360 degrees, for interpolation to be more complete
     lam_new = np.ones(len(lam[lam==0]))*360
     bet_new = bet[lam==0]
     chi_new = chi[lam==0]
+    unreduced_new = unreduced[lam==0]
+    dof_new = dof[lam==0]
     
     bet = np.concatenate([bet,bet_new])
     lam = np.concatenate([lam,lam_new])
     chi = np.concatenate([chi,chi_new])
+    unreduced = np.concatenate([unreduced,unreduced_new])
+    dof = np.concatenate([dof,dof_new])
 
-    return bet,lam,chi
+    return bet,lam,chi,unreduced,dof
 
 def combine(scan_dirs, combine_dir=None):
 
@@ -61,7 +70,7 @@ def combine(scan_dirs, combine_dir=None):
 
     for i,scan_dir in enumerate(scan_dirs):
             
-        bet,lam,chi = results(scan_dir)
+        bet,lam,chi,_,_ = results(scan_dir)
 
         chi_all = np.concatenate([chi_all, chi])
         bet_all = np.concatenate([bet_all, bet])
@@ -108,5 +117,3 @@ def interpolate_chi(bet,lam,chi,betstep=1,lamstep=1):
     chiall = griddata((lam, bet), chi, (lamall, betall), method='linear')
 
     return betall,lamall,chiall
-
-
