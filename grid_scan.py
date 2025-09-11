@@ -1,3 +1,4 @@
+
 #Last modified 10/07/25
 
 import argparse
@@ -9,8 +10,9 @@ import subprocess
 import sys
 from pathlib import Path
 import numpy as np
+from rich.progress import Progress
 from pyshape import mod_file
-from pyshape.outfmt import logger, error_exit
+from pyshape.outfmt import logger, error_exit, console
 from pyshape.utils import check_scan_param_vals, check_no_files
 
 #python -m grid_scan -ps -90 90 10 0 360 10 -mod mod.h.template -obs obs.h.template
@@ -273,27 +275,31 @@ def main():
         Path(f'{cwd}/subscans').mkdir(exist_ok=True)
         #Then empty it from previous scans
         
-        
         #Angle 2 list
         a2_min,a2_max,a2_step = args.angle2_range.min, args.angle2_range.max, args.angle2_range.step
         a2_list = np.arange(a2_min,a2_max+a2_step,a2_step)
         
         #Make directories
-        for a2 in a2_list:
-            #Create a2 directory in subscans
-            subdir = f'{cwd}/subscans/{a2:03d}'
-            Path(subdir).mkdir(exist_ok=True)
-            Path(f'{subdir}/modfiles').mkdir(exist_ok=True)
-            Path(f'{subdir}/obsfiles').mkdir(exist_ok=True)
-            Path(f'{subdir}/logfiles').mkdir(exist_ok=True)
+        with Progress(console=console,transient=True) as pb:
+            t1 = pb.add_task('Creating subscan directories',total=len(a2_list))
+            
+            for a2 in a2_list:
+                #Create a2 directory in subscans
+                subdir = f'{cwd}/subscans/{a2:03d}'
+                Path(subdir).mkdir(exist_ok=True)
+                Path(f'{subdir}/modfiles').mkdir(exist_ok=True)
+                Path(f'{subdir}/obsfiles').mkdir(exist_ok=True)
+                Path(f'{subdir}/logfiles').mkdir(exist_ok=True)
 
-            logging.info(f'Creating files in {subdir}')
+                logging.info(f'Creating files in {subdir}')
 
-            # shutil.copytree(f'{cwd}/par', f'{subdir}/par', dirs_exist_ok=True)  # dirs_exist_ok=True allows overwriting
+                # shutil.copytree(f'{cwd}/par', f'{subdir}/par', dirs_exist_ok=True)  # dirs_exist_ok=True allows overwriting
 
-            no_files = grid_scan_setup(args.param1, args.param2,
-                                args.mod_template, args.obs_template,
-                                subdir, a2)            
+                no_files = grid_scan_setup(args.param1, args.param2,
+                                    args.mod_template, args.obs_template,
+                                    subdir, a2)  
+                
+                pb.update(task_id=t1,advance=1)         
 
         shutil.copy(f'{subdir}/namecores.txt', f'{cwd}/namecores.txt')
         check_no_files(no_files)

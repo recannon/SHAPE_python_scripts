@@ -7,9 +7,16 @@ def read(fname):
     f.close()
 
     chisqrs = {}
-    for l in lines[-30:]: 
+    for l in lines: 
         if not l[0].isnumeric() and l[0]!='WARNING:':
-            chisqrs[f'{l[0]}'] = float(l[-1][:-1])
+            
+            try:
+                chi2 = float(l[-1][:-1])
+            except:
+                continue
+            
+            chisqrs[f'{l[0]}'] = chi2
+                
             if l[0] == 'ALLDATA':
                 chisqrs['unreduced'] = float(l[3])
                 chisqrs['dof'] = float(l[5])

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+namecore=$1
+jobid=$2   # pass SLURM jobid as second argument
+cwd=$(pwd)
+
+
+i=1
+
+# now loop only while job stays RUNNING
+while true; do
+
+    mkdir -p "${cwd}/${namecore}/${i}" || exit 1
+    cd "${cwd}/${namecore}/${i}" || exit 1
+
+    shape "${cwd}/par/mpar" "${cwd}/modfiles/${namecore}.mod" "${cwd}/obsfiles/${namecore}.obs"
+
+    for f in *.ppm; do
+        [ -e "$f" ] || continue
+        jpg="${f%.ppm}.jpg"
+        ffmpeg -loglevel error -hide_banner -y -i "$f" "$jpg"
+    done
+
+    rm *ppm
+    cd "${cwd}" || exit 1
+    ((i++))
+    sleep 5
+done

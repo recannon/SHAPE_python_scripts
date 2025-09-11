@@ -7,6 +7,10 @@ from rich.theme import Theme
 def error_exit(message):
     logger.error(message)
     sys.exit(1)
+    
+def safe_exit(message='Aborting program'):
+    logger.info(message)
+    sys.exit(1)
 
 custom_theme = Theme({
     "logging.level.info": "cyan",

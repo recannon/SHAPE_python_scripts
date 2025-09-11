@@ -50,7 +50,7 @@ def check_type(par,par_name,req_type):
     try:
         return req_type(par)
     except:
-        error_exit(f"{par_name} must be of type {req_type.__name__} (got '{arg_str}')")
+        error_exit(f"{par_name} must be of type {req_type.__name__} (got '{par}')")
 
 def check_dir(path, must_exist=True):
     """Convert to Path and check it's a directory (if required)."""
