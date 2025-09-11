@@ -21,8 +21,8 @@ def plot_polescan(dirname,fig_name,maxlevel,lines):
     
     #Plot
     plot_quick.pq_polescan(bet,lam,chi,
-                        maxlevel=maxlevel,lamstep=1,betstep=1,
-                        lines=lines,cmp='cmr.sunburst',show=False,save=fig_name)
+                        maxlevel=maxlevel, lines=lines,
+                        cmp='cmr.sunburst',show=False,save=fig_name)
     return True
 
 

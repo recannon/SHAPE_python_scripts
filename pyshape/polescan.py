@@ -6,6 +6,8 @@ import glob
 import shutil
 from scipy.interpolate import griddata
 from .outfmt import logger,error_exit
+import healpy as hp
+
 
 def results(scan_dir):
 
@@ -107,13 +109,51 @@ def combine(scan_dirs, combine_dir=None):
 
     return combined_best.bet,combined_best.lam,combined_best.chi, combined_best.loc
 
-def interpolate_chi(bet,lam,chi,betstep=1,lamstep=1):
+def interpolate_chi(bet,lam,chi, nside=32):
     
-    #Create 1x1 meshgrid of poles
-    lamall, betall = np.meshgrid(np.arange(0, 360 + lamstep, lamstep),
-                                np.arange(-90, 90 + betstep, betstep))
+    #Interpolate onto spherical healpy grid
+    npix = hp.nside2npix(nside)
 
-    #Interpolate values of chisqr for every grid point
-    chiall = griddata((lam, bet), chi, (lamall, betall), method='linear')
+    theta, phi = hp.pix2ang(nside, np.arange(npix))
+    lat = np.rad2deg(np.pi/2 - theta)   # latitude [-90, +90]
+    lon = np.rad2deg(phi)               # longitude [0, 360)
 
-    return betall,lamall,chiall
+    # interpolate onto HEALPix points
+    chiall = griddata(
+        np.column_stack([lam, bet]),        # input scattered coords
+        chi,                                # values at those coords
+        np.column_stack([lon, lat]),        # HEALPix coords
+        method='linear'
+    )
+
+    coords_lon = lon.copy()
+    coords_lat = lat.copy()
+    coords_chi = chiall.copy()
+
+    #Adds where initial scan was lon = 0
+    lon_wrap = np.concatenate([coords_lon, lam[lam==0]])
+    lat_wrap = np.concatenate([coords_lat, bet[lam==0]])
+    chi_wrap = np.concatenate([coords_chi, chi[lam==0]])
+    #Duplicate to 360
+    lon_wrap2 = np.concatenate([lon_wrap, lon_wrap[lon_wrap==0]+360])
+    lat_wrap2 = np.concatenate([lat_wrap, lat_wrap[lon_wrap==0]])
+    chi_wrap2 = np.concatenate([chi_wrap, chi_wrap[lon_wrap==0]])
+
+    #Pole values
+    minval = np.min(coords_chi)
+    lon_poles = np.concatenate([lam[bet==-90],lam[bet==90]])
+    lat_poles = np.concatenate([bet[bet==-90],bet[bet==90]])
+    chi_poles = np.concatenate([chi[bet==-90],chi[bet==90]])
+    # chi_poles = np.concatenate([chi[bet==-90],np.array([10,10])])
+
+    #plot arrays
+    lon_plot = np.concatenate([lon_wrap2, lon_poles])
+    lat_plot = np.concatenate([lat_wrap2, lat_poles])
+    chi_plot = np.concatenate([chi_wrap2, chi_poles])
+
+    #remove nans
+    lon_plot = lon_plot[~np.isnan(chi_plot)]
+    lat_plot = lat_plot[~np.isnan(chi_plot)]
+    chi_plot = chi_plot[~np.isnan(chi_plot)]
+
+    return lon_plot,lat_plot,chi_plot

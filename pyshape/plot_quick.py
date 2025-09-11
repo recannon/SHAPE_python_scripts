@@ -5,37 +5,34 @@ import numpy as np
 from . import polescan
 from astropy.stats import sigma_clip
 from .outfmt import logger
+import matplotlib.tri as tri
 
-def pq_polescan(bet,lam,chi,
-                maxlevel=1.5,betstep=1,lamstep=1,lines=[],cmp='magma',save=False,show=True):
 
-    #Create 1x1 meshgrid of poles
-    betall,lamall,chiall = polescan.interpolate_chi(bet,lam,chi,betstep,lamstep)
-
+def pq_polescan(bet:np.array, lam:np.array, chi:np.array,
+                maxlevel:float=1.5, nside:int=32, lines:list=[],
+                cmp:str='magma', save:str=None, show:bool=True):
+    
     pole_mask = np.logical_or(bet==90, bet==-90)
 
-    minchi = np.nanmin(chiall)
-    logger.debug(f'Minimum chisqr is {minchi}')
+    lon_plot,lat_plot,chi_plot = polescan.interpolate_chi(bet,lam,chi,nside)
+    coords_plot = tri.Triangulation(lon_plot, lat_plot)
 
+    minchi = chi_plot.min()
+    
     fig, ax = plt.subplots(figsize=(12, 6))
     col_contours = np.arange(minchi, minchi * maxlevel,
                             (minchi * maxlevel - minchi) / 15)
-
-    #Poles scanned
-    ax.plot(lam, bet, 'go', markersize=1)#, alpha=0.5)
-    #Interpolated colour map
-    cf = ax.contourf(lamall, betall, chiall, levels=col_contours, cmap=cmp)
-    #Optional line contours
+    ax.plot(lam,bet,'g.',alpha=1,markersize=1)
+    cf = ax.tricontourf(coords_plot, chi_plot, cmap="cmr.sunburst", levels=col_contours)
     if lines:
         lin_contours = np.min(chi) * (1 + (np.array(lines) / 100))
-        ax.contour(lamall, betall, chiall, colors='deepskyblue', 
-                   linestyles=['solid', 'dashed', 'dotted'],
-                   levels=lin_contours, linewidths=1)
-        
-    #Minimum chisqr
-    ax.plot(lam[np.nanargmin(chi)], bet[np.nanargmin(chi)], 'cd')
+        cl = ax.tricontour(coords_plot, chi_plot, levels=lin_contours,
+                    colors='deepskyblue', linestyles=['-','--',':'])
 
-    ax.tick_params(axis='both', which='major', labelsize=18)
+    # add colorbar linked to the contour plot
+    cbar = fig.colorbar(cf, ax=ax)
+    cbar.set_label("Chi value", fontsize=14)   # optional label
+        
     ax.set_xticks(np.arange(0, 361, 60))
     ax.set_yticks(np.arange(-90, 91, 30))
     ax.set_xlabel("Longitude", fontsize=20)
@@ -44,17 +41,10 @@ def pq_polescan(bet,lam,chi,
     ax.set_ylim(np.min(bet), np.max(bet))
     ax.set_title(f'({bet[np.nanargmin(chi)]}, {lam[np.nanargmin(chi)]}) : {minchi}', fontsize=30)
 
-    cbar = fig.colorbar(cf, ax=ax)
-    cbar.ax.tick_params(labelsize=16, labelleft=True,
-                        labelright=False, left=True, right=False)
-    cbar.set_label('Reduced chi-squared', rotation=270, fontsize=18, labelpad=20)
-    if show:
-        logger.debug(f'Displaying polescan')
-        plt.show()
     if save:
-        logger.debug(f'Saving polescan to {save}')
-        plt.savefig(save)
-    plt.close()
+        fig.savefig(save)
+
+    fig.show()
 
     return 1
 
