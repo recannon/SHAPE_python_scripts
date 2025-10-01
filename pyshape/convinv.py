@@ -1,4 +1,4 @@
-from .outfmt import logger
+from .io_utils import logger
 import numpy as np
 import re
 

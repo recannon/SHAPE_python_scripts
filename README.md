@@ -14,21 +14,22 @@ scan_dir/
 ├── logfiles/       # Logs from launch_fitting.sbatch
 ├── waction/        # Log files for write action
 ├── par/            # Parameter files: wpar, mpar, fpar, etc.
-└── namecores.txt   # List of file name cores (for mod/obs combinations to run)
+├── namecores.txt   # List of file name cores (for mod/obs combinations to run)
+└── README          # Not compulsory but good practice to keep notes
 ```
 
 ---
 
 ## Notes
 
-- Some directories are created are scripts and some aren't, so best to make sure they all exist.
+- Some directories are created by scripts and some aren't, so best to make sure they all exist.
 - `namecores.txt` should contain base filenames (without extensions) for mod/obs pairs to run.
 
 ---
 
 ## Documentation
 
-- Documentation for python scripts can be with `python -m <script> -h` There is limited documentation in the code, but example run commands at the top of every file
+- Documentation for python scripts can be with `python -m <script> -h` There is limited documentation in the code, but example run commands at the top of every file. E.g. `python -m pyshape.scan.run_grid -h`. `python -m pyshape.scan -h` also works to remind you of the available commands.
 - The other only frequently run script is launch_fitting.sbatch, which can be run as follows:
 ```
 sbatch --array=1-{no_files} launch_fitting.sbatch [a2]

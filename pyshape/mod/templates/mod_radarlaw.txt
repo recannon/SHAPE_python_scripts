@@ -1,0 +1,5 @@
+{RADAR SCATTERING LAW {{ law_no }}}
+ {{ radar_law.type | fmt(" >15")}} {type}
+ {{ radar_law.R_freeze }}    {{ radar_law.R | fmt("10.6f") }} {R}
+ {{ radar_law.C_freeze }}    {{ radar_law.C | fmt("10.6f") }} {C}
+ 

@@ -1,0 +1,20 @@
+{SPIN STATE}
+{{ cnvrt_time(spin_state.t0) }} {yyyy mo dd hh mm ss of t0}
+ {{ spin_state.angle0_freeze   }} {{ spin_state.angle0 | fmt("16.10f") }} {angle 0 (deg) lambda={{ spin_state.lam | fmt("6.6f") }}}
+ {{ spin_state.angle1_freeze   }} {{ spin_state.angle1  | fmt("16.10f")  }} {angle 1 (deg) beta={{ spin_state.bet | fmt("6.6f") }}}
+ {{ spin_state.angle2_freeze   }} {{ spin_state.angle2  | fmt("16.10f")  }} {angle 2 (deg)}
+ {{ spin_state.spin0_freeze    }} {{ spin_state.spin0  | fmt("16.10f")   }} {spin 0 (deg/day)}
+ {{ spin_state.spin1_freeze    }} {{ spin_state.spin1  | fmt("16.10f")   }} {spin 1 (deg/day)}
+ {{ spin_state.spin2_freeze    }} {{ spin_state.spin2  | fmt("16.10f")   }} {spin 2 (deg/day) P={{ spin_state.P | fmt("6.6f") }}}
+ {{ spin_state.moi0_freeze     }} {{ spin_state.moi0  | fmt("16.10f")   }} {moment of inertia 0}
+ {{ spin_state.moi1_freeze     }} {{ spin_state.moi1  | fmt("16.10f")   }} {moment of inertia 1}
+ {{ spin_state.moi2_freeze     }} {{ spin_state.moi2  | fmt("16.10f")   }} {moment of inertia 2}
+ {{ spin_state.spin0dot_freeze }} {{ spin_state.spin0dot  | fmt("16.10f")  }} {spin 0 dot (deg/day/day)}
+ {{ spin_state.spin1dot_freeze }} {{ spin_state.spin1dot  | fmt("16.10f")  }} {spin 1 dot (deg/day/day)}
+ {{ spin_state.spin2dot_freeze }} {{ spin_state.spin2dot  | fmt("16.10f")  }} {spin 2 dot (deg/day/day)}
+ {{ spin_state.libamp_freeze   }} {{ spin_state.libamp  | fmt("16.10f")  }} {Libration Amplitude (degrees)}
+ {{ spin_state.libfreq_freeze  }} {{ spin_state.libfreq  | fmt("16.10f")  }} {Libration Frequency (degrees/day)}
+ {{ spin_state.libphase_freeze }} {{ spin_state.libphase  | fmt("16.10f")  }} {Libration Phase (degrees)}
+                  {{ spin_state.noimpulses }} {number of spin impulses}
+
+                  

@@ -1,15 +1,16 @@
-#Last modified 16/05/2025
+#Last modified 12/09/2025
+
+import argparse
+import logging
+from pathlib import Path
+import subprocess
+from pyshape.obs import obs_io
+from pyshape.io_utils import logger, error_exit, check_type
+from pyshape.plotting import quick_routines
+
 #python /path/to/write_fit.py modfile obsfile
 #python /path/to/write_fit.py lat lon (if pole scan, give values as strings, e.g +40 060. Files expected in mod/obsfiles) 
 #python /path/to/write_fit.py --all (runs fit for all files in namecores, looking in modfiles/obsfiles) 
-
-from pyshape.outfmt import logger, error_exit
-from pyshape.utils import check_type
-import subprocess
-from pyshape import obs_file, plot_quick
-import argparse
-from pathlib import Path
-import logging
 
 def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.',no_cols=3,res=False):
     """
@@ -73,7 +74,7 @@ def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.'
         subprocess.run(["bash", temp_path / "mpar_stack.sh"], cwd=temp_path, stdout=log, check=True)
 
     #Read obsfile to check for which data types are present
-    obs_sets  = obs_file.read(obsfile)
+    obs_sets  = obs_io.read(obsfile)
     set_types = set(obs_set.type for obs_set in obs_sets) 
        
     #delay-Doppler requires stacking of pgm images
@@ -112,12 +113,12 @@ def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.'
     if 'lightcurve' in set_types:
         lc_fits = sorted(temp_path.glob("fit_??.dat"))
         #Create lightcurve plot
-        plot_quick.pq_lightcurves(lc_fits, show=False, save=temp_path / '3_lc_fits.jpg')
+        quick_routines.quick_lightcurves(lc_fits, show=False, save=temp_path / '3_lc_fits.jpg')
 
     if 'doppler' in set_types:
         cw_fits = sorted(temp_path.glob("fit_??_??.dat"))
         #Create plot
-        plot_quick.pq_doppler(cw_fits, show=False, save=temp_path / '4_cw_fits.jpg')
+        quick_routines.quick_doppler(cw_fits, show=False, save=temp_path / '4_cw_fits.jpg')
 
     #Stack jpg files into a pdf
     jpg_files = sorted(temp_path.glob("*.jpg"))

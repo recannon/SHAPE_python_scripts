@@ -8,5 +8,4 @@ Dependencies
 - Trimesh
 - jinja2
 - rich
-[Optional]
-- cmasher (for pretty plots)
+- cmasher
