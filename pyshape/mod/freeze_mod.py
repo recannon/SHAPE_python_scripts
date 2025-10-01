@@ -5,7 +5,7 @@ import glob
 import logging
 from pathlib import Path
 from ..io_utils import logger, error_exit
-from .mod_io_2 import modFile
+from .mod_io import modFile
 
 #python -m freeze_mod modfiles v 1
 #python -m freeze_mod test.mod e 0 1

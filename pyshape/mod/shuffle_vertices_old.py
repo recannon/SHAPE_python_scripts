@@ -4,7 +4,7 @@ import glob
 import logging
 from pathlib import Path
 import numpy as np
-from . import mod_io
+from . import mod_io_old
 from ..io_utils import logger, error_exit
 
 #python -m convert_type modfiles -vmod 500 n 
@@ -15,7 +15,7 @@ def shuffle_vertices(fname):
 
     logger.debug('Shuffling vertices')
     logger.debug(f'{fname}')
-    mod_info = mod_io.read(fname)
+    mod_info = mod_io_old.read(fname)
     vertex_comp = mod_info.components[0]  #mkvertmod always produces 1 component
 
     #Random permutation
@@ -29,7 +29,7 @@ def shuffle_vertices(fname):
     vertex_comp.facets = index_map[vertex_comp.facets]
     mod_info.components = [vertex_comp]
 
-    mod_io.write(mod_info, fname)
+    mod_io_old.write(mod_info, fname)
 
     return True
 

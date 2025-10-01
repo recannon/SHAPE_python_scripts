@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path
 import numpy as np
 from rich.progress import Progress
-from ..mod.mod_io_2 import modFile
+from ..mod.mod_io import modFile
 from ..io_utils import logger, error_exit, console
 from . import scan_io
 

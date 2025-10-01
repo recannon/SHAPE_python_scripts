@@ -4,7 +4,7 @@ import glob
 import logging
 from pathlib import Path
 import numpy as np
-from . import mod_io_2
+from . import mod_io
 from ..io_utils import logger, error_exit
 
 #python -m convert_type modfiles -vmod 500 n 
@@ -15,7 +15,7 @@ def shuffle_vertices(fname):
 
     logger.debug('Shuffling vertices')
     logger.debug(f'{fname}')
-    mod_info = mod_io_2.modFile.from_file(fname)
+    mod_info = mod_io.modFile.from_file(fname)
 
     for comp in mod_info.components:
         if comp.type == "vertex":
