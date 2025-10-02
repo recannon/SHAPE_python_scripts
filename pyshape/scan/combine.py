@@ -5,8 +5,7 @@ import logging
 from pathlib import Path
 import shutil
 import numpy as np
-from ..io_utils import logger,error_exit
-from ..utils import check_dir
+from ..io_utils import logger,error_exit,check_dir
 from . import scan_io
 
 
@@ -67,7 +66,7 @@ def parse_args():
                                help='If toggled will combine all polescans in ./subscans into ./')
     combine_group.add_argument('--dirs',nargs='+',default=None,
                                help='List of paths to polescans to be combined. Cannot use with --subscans')
-    combine_group.add_argument('--out-dir',type=str,
+    combine_group.add_argument('--out-dir',type=str,default=None,
                                help='Out directory to save combined results. Not required, but optional, if using --subscans')
     
     return parser.parse_args()
@@ -109,7 +108,7 @@ def main():
     args = validate_args(args)
 
 
-    combine_polescan(args.dirs,args.out_dir,args.plot,[args.fig_name,args.max_level,args.lines])
+    combine_polescan(args.dirs,args.out_dir)
 
 
 if __name__ == "__main__":
