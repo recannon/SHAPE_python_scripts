@@ -19,10 +19,11 @@ def quick_gridscan(bet:np.array, lam:np.array, chi:np.array,
     lon_plot, lat_plot, chi_plot = _q_interpolate_chi_sphere(bet, lam, chi, res=res)
     
     minchi = chi_plot.min()
+    logger.debug(f'Minchi = {minchi}')
     
     fig, ax = plt.subplots(figsize=(12, 6))
-    col_contours = np.arange(minchi, minchi * maxlevel,
-                            (minchi * maxlevel - minchi) / 15)
+    col_contours = np.arange(minchi, (minchi*maxlevel),
+                            ((minchi*maxlevel) - minchi) / 20)
     ax.plot(lam,bet,'g.',alpha=1,markersize=1)
     cf = ax.contourf(lon_plot, lat_plot, chi_plot, cmap=cmp, levels=col_contours)
     if lines:
@@ -56,15 +57,16 @@ def _q_interpolate_chi_sphere(bet,lam,chi, res=1):
     mask = ~np.isnan(chi)
     bet, lam, chi = np.asarray(bet)[mask], np.asarray(lam)[mask], np.asarray(chi)[mask]
 
-    lon_vals = np.arange(0, 360 + res, res)
-    lat_vals = np.arange(-90, 90 + res, res)
+    lon_vals = np.arange(np.nanmin(lam), np.nanmax(lam) + res, res)
+    lat_vals = np.arange(np.nanmin(bet), np.nanmax(bet) + res, res)
     lon_grid, lat_grid = np.meshgrid(lon_vals, lat_vals)
 
     chi_grid = griddata(
         points=np.column_stack((lam, bet)), 
         values=chi,
         xi=(lon_grid, lat_grid),
-        method="linear"
+        method="linear",
+        fill_value=1e7,
     )
 
     return lon_grid, lat_grid, chi_grid
@@ -129,7 +131,7 @@ def main():
 
     bet,lam = bet[~np.isnan(chi)],lam[~np.isnan(chi)]
     chi = chi[~np.isnan(chi)]
-    
+        
     #Duplicate values across from 0 to 360 degrees, for interpolation to be more complete
     lam_new = np.ones(len(lam[lam==0]))*360
     bet_new = bet[lam==0]
