@@ -12,7 +12,7 @@
  {{ component.freeze_state.scale2 }} {{ component.scale2 | fmt(" 10.6e") }} {scale factor 2}
 {% for freeze, dev, dircos, base in zip(component.freeze_state.vertices, component.deviations, component.dev_dirs, component.base_disp) -%}
 {{ freeze | fmt(" >2") }} {{ dev | fmt(" 13.6e") }}   {{ dircos[0] | fmt(" 13.6e") }} {{ dircos[1] | fmt(" 13.6e") }} {{ dircos[2] | fmt(" 13.6e") }}
-       {{ base[0] | fmt(" 13.6e") }} {{ base[1] | fmt(" 13.6e") }} {{ base[2] | fmt(" 13.6e") }}
+       {{ base[0] | fmt(" 12.6e") }} {{ base[1] | fmt(" 13.6e") }} {{ base[2] | fmt(" 13.6e") }}
 {% endfor %} {{ component.no_fac | fmt(" >12") }} {number of facets}
 {% for i, facet in enumerate(component.facets) -%}
 {{ facet[0] | fmt(" >7") }}{{ facet[1] | fmt(" >7") }}{{ facet[2] | fmt(" >7") }} {f {{ i }}} 

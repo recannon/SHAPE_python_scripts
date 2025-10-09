@@ -30,11 +30,11 @@ def freeze_mod(fname, mod_type, freeze, selection=None):
 
     # Open File
     mod_info = modFile.from_file(fname)
+    
+    components = mod_info.components
+    no_components = len(components)
 
     if mod_type in ('e', 'ellipse'):
-
-        components = mod_info.components
-        no_components = len(components)
 
         if not selection:
             selection = range(no_components)
@@ -53,15 +53,22 @@ def freeze_mod(fname, mod_type, freeze, selection=None):
 
     elif mod_type == 'v' or mod_type == 'vertex':
 
-        #Check only one component
-        no_components = int(file_lines[3].strip().split()[0])
-        if no_components != 1:
-            raise ValueError('Cannot change a vertex model with more than 1 component')
-
-        no_vertex = int(file_lines[12].split()[0])
+        no_vertex = components[0].no_vert
         logger.debug(f'{no_vertex} vertices')
 
-        file_lines[13:17+(2*no_vertex)] = [line.replace(change[freeze],change[-freeze]) for line in file_lines[13:17+(2*no_vertex)]]
+        if not selection:
+            selection = range(no_components)
+        elif max(selection) >= no_components:
+            raise ValueError(f'File does not have {int(max(selection)) + 1} components')
+            
+        for idx in selection:
+            if components[idx].type != 'vertex':
+                error_exit(f'Component {idx} is not an ellipse')
+        
+        for idx in selection:
+            components[idx].freeze_params(freeze)
+            
+        mod_info.write(fname)
 
 
     elif mod_type == 'h' or mod_type == 'harmonic':
@@ -110,9 +117,9 @@ def freeze_mod(fname, mod_type, freeze, selection=None):
         raise ValueError('Not a valid mod_type')
 
     #Overwrite file with edits
-    f = open(fname, 'w')
-    f.writelines(file_lines)
-    f.close()
+    # f = open(fname, 'w')
+    # f.writelines(file_lines)
+    # f.close()
 
     logger.debug('Done')
     return 1
@@ -128,7 +135,7 @@ def parse_args():
     #Beta and lambda ranges and steps
     parser.add_argument("fname",    type=str, help="Name of file to affect. If directory, will affect all .mod files in directory")
     parser.add_argument("mod_type", type=str, help="Type of component expected")
-    parser.add_argument("freeze",   type=int, help="[ f, c, = ] . Change variables to this str")
+    parser.add_argument("freeze",   type=str, help="[ f, c, = ] . Change variables to this str")
 
     parser.add_argument("-c", "--components", nargs='+', type=int, default=[],
                         help="Optional list of components to affect (ellipse only)")

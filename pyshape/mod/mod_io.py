@@ -123,7 +123,7 @@ class modFile:
         output_lines.append(f'{{MODEL FILE FOR SHAPE.C VERSION 2.10.11 BUILD Thu 1 May 13:19:01 BST 2025}}\n\n')
 
         output_lines.extend([f'{{SHAPE DESCRIPTION}}\n',
-                             f'{len(self.components)} {{number of components}}\n'])
+                             f'{len(self.components):>16} {{number of components}}\n'])
         for i,c in enumerate(self.components):
             c_lines = c.to_lines(idx=i)
             output_lines.extend(c_lines)
@@ -469,6 +469,20 @@ class ModVertex(FreezeAwareBase):
         index_map[perm] = np.arange(n)
         self.facets = index_map[self.facets]
         return
+
+    def freeze_params(self, state, fields=None):
+        if fields is None:
+            fields = list(self._param_index.keys()) + ['vertices']
+
+        for field in fields:
+            if field == 'vertices':
+                logger.debug('Freezing vertices')
+                self.vertices_freeze = [state]*self.no_vert
+            else:
+                logger.debug(f'Freezing {field}')
+                idx = self._param_index[field]
+                self.values_freeze[idx] = state
+    
 
     @classmethod
     def from_lines(cls, v_lines):
