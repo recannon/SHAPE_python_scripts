@@ -154,7 +154,9 @@ def setup_grid_scan(p1,p2,mod_template,obs_template,outf,angle2=0):
 
             #Write new file
             if polescan:
-                namecore = f'lat{p1_val:+03d}lon{p2_val:03d}'
+                bet = 90 - p1_val
+                lam = (p2_val - 90)%360
+                namecore = f'lat{bet:+03d}lon{lam:03d}'
             else:
                 namecore = f'{p1.name}{p1_val:+.3f}{p2.name}{p2_val:+3f}'
             new_ModFile.write(f'{outf}/modfiles/{namecore}.mod')
@@ -199,7 +201,11 @@ def create_polescan_lists(bet_min,bet_max,bet_step,lam_min,lam_max,lam_step):
         for l in lam_array:
             lambda_list.append(int(l))
             beta_list.append(int(bet))
-    return beta_list,lambda_list
+    
+    lambda_array,beta_array = np.array(lambda_list),np.array(beta_list)
+    
+    angle0_array,angle1_array = (lambda_array+90)%360, 90-beta_array
+    return angle1_array,angle0_array #Returns beta first
 
 #===Functions for parsing args===
 def parse_args():
