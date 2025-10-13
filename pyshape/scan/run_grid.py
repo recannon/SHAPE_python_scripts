@@ -33,7 +33,7 @@ def run_grid_scan(args):
         
         scan_io.check_no_files(no_files)
 
-        script_dir = Path(__file__).resolve().parent
+        script_dir = Path(__file__).resolve().parents[2]
         subprocess.run(["sbatch", f"--array=1-{no_files}", f'{script_dir}/launch_fitting.sbatch'])
         logger.info(f'Submitted SLURM array jobs 1-{no_files}')
 
