@@ -336,6 +336,7 @@ class ModEllipse(FreezeAwareBase):
             fields=list(self._param_index.keys())
 
         for field in fields:
+            logger.debug(f'Changing {field} to {state}')
             idx = self._param_index[field]
             self.values_freeze[idx] = state
     
@@ -476,10 +477,10 @@ class ModVertex(FreezeAwareBase):
 
         for field in fields:
             if field == 'vertices':
-                logger.debug('Freezing vertices')
+                logger.debug(f'Changing vertices to {state}')
                 self.vertices_freeze = [state]*self.no_vert
             else:
-                logger.debug(f'Freezing {field}')
+                logger.debug(f'Changing {field} to {state}')
                 idx = self._param_index[field]
                 self.values_freeze[idx] = state
     

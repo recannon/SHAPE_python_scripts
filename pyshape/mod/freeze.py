@@ -46,9 +46,9 @@ def freeze_mod(fname, mod_type, freeze, selection=None):
                 error_exit(f'Component {idx} is not an ellipse')
         
         for idx in selection:
-            components[idx].freeze('e', freeze)
+            components[idx].freeze_params(freeze)
             
-        mod_info.write()
+        mod_info.write(fname)
 
 
     elif mod_type == 'v' or mod_type == 'vertex':
