@@ -20,7 +20,7 @@ def combine_polescan(fit_dirs,out_dir):
 
     for i,scan_dir in enumerate(fit_dirs):
             
-        bet,lam,chi,_,_ = scan_io.polescan_results(scan_dir)
+        bet,lam,chi = scan_io.polescan_results(scan_dir)
 
         chi_all = np.concatenate([chi_all, chi])
         bet_all = np.concatenate([bet_all, bet])
