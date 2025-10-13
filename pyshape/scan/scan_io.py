@@ -45,7 +45,7 @@ def polescan_results(scan_dir):
     chi,bet,lam = np.array(chi),np.array(bet),np.array(lam)
     unreduced,dof = np.array(unreduced),np.array(dof)
 
-    return bet,lam,chi,unreduced,dof
+    return bet,lam,chi
 
 #===Helper functions for line and grid_scan inputs
 @dataclasses.dataclass

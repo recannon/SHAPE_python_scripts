@@ -16,7 +16,7 @@ def quick_gridscan(bet:np.array, lam:np.array, chi:np.array,
     
     pole_mask = np.logical_or(bet==90, bet==-90)
 
-    lon_plot, lat_plot, chi_plot = _q_interpolate_chi_sphere(bet, lam, chi, res=res)
+    lon_plot, lat_plot, chi_plot = _q_interpolate_chi_grid(bet, lam, chi, res=res)
     
     minchi = chi_plot.min()
     logger.debug(f'Minchi = {minchi}')
@@ -52,7 +52,7 @@ def quick_gridscan(bet:np.array, lam:np.array, chi:np.array,
     
 
 #Quick interpolate does not use spherical interpolation
-def _q_interpolate_chi_sphere(bet,lam,chi, res=1):
+def _q_interpolate_chi_grid(bet,lam,chi, res=1):
     
     mask = ~np.isnan(chi)
     bet, lam, chi = np.asarray(bet)[mask], np.asarray(lam)[mask], np.asarray(chi)[mask]
@@ -127,7 +127,7 @@ def main():
 
 
     logger.debug(f'Scanning files in {args.dirname}')
-    bet,lam,chi,_,_ = scan_io.polescan_results(args.dirname)
+    bet,lam,chi = scan_io.polescan_results(args.dirname)
 
     bet,lam = bet[~np.isnan(chi)],lam[~np.isnan(chi)]
     chi = chi[~np.isnan(chi)]
