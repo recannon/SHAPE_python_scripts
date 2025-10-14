@@ -179,7 +179,7 @@ def main():
 
 
     logger.debug(f'Scanning files in {args.dirname}')
-    bet,lam,chi,_,_ = scan_io.polescan_results(args.dirname)
+    bet,lam,chi = scan_io.polescan_results(args.dirname)
 
     bet,lam = bet[~np.isnan(chi)],lam[~np.isnan(chi)]
     chi = chi[~np.isnan(chi)]
