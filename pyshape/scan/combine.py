@@ -66,7 +66,7 @@ def parse_args():
                                help='If toggled will combine all polescans in ./subscans into ./')
     combine_group.add_argument('--dirs',nargs='+',default=None,
                                help='List of paths to polescans to be combined. Cannot use with --subscans')
-    combine_group.add_argument('--out-dir',type=str,default=None,
+    combine_group.add_argument('--outdir',type=str,default=None,
                                help='Out directory to save combined results. Not required, but optional, if using --subscans')
     
     return parser.parse_args()
@@ -83,16 +83,16 @@ def validate_args(args):
         if args.dirs:
             error_exit('Cannot combine subscans with other polescans. Do this separately')            
         args.dirs    = sorted(list(Path.cwd().joinpath("subscans").glob("*")))
-        if not args.out_dir:
-            args.out_dir = Path.cwd()
+        if not args.outdir:
+            args.outdir = Path.cwd()
         else:
-            args.out_dir = check_dir(args.out_dir)
+            args.outdir = check_dir(args.outdir)
     
     elif args.dirs:
         args.dirs = [check_dir(dir) for dir in args.dirs]
-        if not args.out_dir:
-            error_exit('Must provide --out-dir if not using --subscan')    
-        args.out_dir = check_dir(args.out_dir)
+        if not args.outdir:
+            error_exit('Must provide --outdir if not using --subscan')    
+        args.outdir = check_dir(args.outdir)
         
     else:
         error_exit('Must provide either --subscan or a list of --dirs')     
@@ -108,7 +108,7 @@ def main():
     args = validate_args(args)
 
 
-    combine_polescan(args.dirs,args.out_dir)
+    combine_polescan(args.dirs,args.outdir)
 
 
 if __name__ == "__main__":
