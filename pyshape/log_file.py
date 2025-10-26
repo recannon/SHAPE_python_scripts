@@ -11,7 +11,7 @@ def read(fname):
         if not l[0].isnumeric() and l[0]!='WARNING:':
             
             try:
-                chi2 = float(l[-1][:-1])
+                chi2 = float(l[10][:7])
             except:
                 continue
             
