@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=RS11_per
-#SBATCH --time=6:00:00               # Time limit in the format hr:min:sec​
+#SBATCH --job-name=rs_FIN!
+#SBATCH --time=8:00:00               # Time limit in the format hr:min:sec​
 #SBATCH --output=./faction/job_output_%j.log    # Output file (with job ID in the filename)​
 #SBATCH --error=./faction/job_error_%j.log      # Error file (with job ID in the filename)​
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=8
-#SBATCH --mem=2G
+#SBATCH --mem=8G
 #SBATCH --exclude=worker096
 
 # sbatch --array=1-N launch_fitting.sbatch [a2]

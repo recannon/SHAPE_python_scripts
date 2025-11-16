@@ -127,7 +127,7 @@ def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.'
     subprocess.run(["bash", script_dir / "bash_scripts/create_pdf.sh", output_name, *map(str, jpg_files)], check=True)
     
     #Empty waction folder without trying to remove directories
-    subprocess.run('find waction/temp -maxdepth 1 -type f -exec rm {} +', shell=True, check=True)
+    # subprocess.run('find waction/temp -maxdepth 1 -type f -exec rm {} +', shell=True, check=True)
 
     return True
 

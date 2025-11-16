@@ -14,6 +14,18 @@ def quick_gridscan(bet:np.array, lam:np.array, chi:np.array,
                 maxlevel:float=1.5, res:float=1, lines:list=[],
                 cmp:str='cmr.sunburst', save:str=None, show:bool=True):
     
+    bet,lam = bet[~np.isnan(chi)],lam[~np.isnan(chi)]
+    chi = chi[~np.isnan(chi)]
+        
+    #Duplicate values across from 0 to 360 degrees, for interpolation to be more complete
+    lam_new = np.ones(len(lam[lam==0]))*360
+    bet_new = bet[lam==0]
+    chi_new = chi[lam==0]
+    
+    bet = np.concatenate([bet,bet_new])
+    lam = np.concatenate([lam,lam_new])
+    chi = np.concatenate([chi,chi_new])
+    
     pole_mask = np.logical_or(bet==90, bet==-90)
 
     lon_plot, lat_plot, chi_plot = _q_interpolate_chi_grid(bet, lam, chi, res=res)
@@ -128,18 +140,6 @@ def main():
 
     logger.debug(f'Scanning files in {args.dirname}')
     bet,lam,chi = scan_io.polescan_results(args.dirname)
-
-    bet,lam = bet[~np.isnan(chi)],lam[~np.isnan(chi)]
-    chi = chi[~np.isnan(chi)]
-        
-    #Duplicate values across from 0 to 360 degrees, for interpolation to be more complete
-    lam_new = np.ones(len(lam[lam==0]))*360
-    bet_new = bet[lam==0]
-    chi_new = chi[lam==0]
-    
-    bet = np.concatenate([bet,bet_new])
-    lam = np.concatenate([lam,lam_new])
-    chi = np.concatenate([chi,chi_new])
     
     #Plot
     quick_gridscan(bet,lam,chi,

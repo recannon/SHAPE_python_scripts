@@ -127,7 +127,7 @@ class modFile:
         for i,c in enumerate(self.components):
             c_lines = c.to_lines(idx=i)
             output_lines.extend(c_lines)
-        output_lines.append('\n')
+            output_lines.append('\n')
         
         output_lines.append(f'\n\n{{PHOTOMETRIC FUNCTIONS}}\n')
         output_lines.append(f'{len(self.phot_functions[0]):>16} {{number of radar scattering laws}}\n')

@@ -9,17 +9,16 @@ from ..io_utils import logger,error_exit
 #===Read polescans===
 def polescan_results(scan_dir):
 
-    # #First check jobs finished
-    # faction_path = f'{scan_dir}/faction/job_output*'
-    # faction_files = sorted(glob.glob(faction_path))
-    # # print(f'Found {len(faction_path)} faction files')
-    # for fac in faction_files:
-    #     f = open(fac,'r')
-    #     lines = [l.strip().split() for l in f.readlines()]
-    #     f.close()
-    #     if lines[-1][0] != 'Done':
-    #         logger.warning(f'Warning: {fac} not completed. {lines[-2][3]}')
-
+    #First check jobs finished
+    faction_path = f'{scan_dir}/faction/job_output*'
+    faction_files = sorted(glob.glob(faction_path))
+    # print(f'Found {len(faction_path)} faction files')
+    for fac in faction_files:
+        f = open(fac,'r')
+        lines = [l.strip().split() for l in f.readlines()]
+        f.close()
+        if lines[-1][0] != 'Done':
+            logger.warning(f"Warning: {fac} not completed. '{lines[2][0]}'")
 
     log_file_path = f'{scan_dir}/logfiles/lat*.log'
     log_files = sorted(glob.glob(log_file_path))
