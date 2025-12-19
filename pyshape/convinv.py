@@ -134,7 +134,6 @@ def read_lctxt(filename):
         
         #Calculate magnitude value for this intensity, and centre on 0
         magnitudes = -2.5*np.log10(data[:,1])+5
-        magnitudes = (magnitudes-np.mean(magnitudes))
         data = np.concatenate([data, magnitudes[:, np.newaxis]], axis=1)
         #Append data to lightcurves list
         lightcurves.append(data)

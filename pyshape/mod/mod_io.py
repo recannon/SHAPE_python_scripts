@@ -174,6 +174,14 @@ class FreezeAwareBase:
         if freeze is not None:
             self.values_freeze[idx] = freeze
 
+    def values_to_dict(self, *, include_frozen: bool = True) -> dict[str, float]:
+        out = {}
+        for name, idx in self._param_index.items():
+            if not include_frozen and self.values_freeze[idx] == "c":
+                continue
+            out[name] = self.values[idx]
+        return out
+
     def __setattr__(self, name: str, value):
         if name in self._param_index:
             self.values[self._param_index[name]] = value
@@ -220,6 +228,13 @@ class ModSpinState(FreezeAwareBase):
     @bet.setter
     def bet(self, new_value):
         self.angle1 = 90 - new_value
+        
+    @property
+    def phi(self):
+        return self.angle2
+    @phi.setter
+    def phi(self, new_value):
+        self.angle2 = new_value
 
     @property
     def P(self):
