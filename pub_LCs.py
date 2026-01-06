@@ -1,9 +1,6 @@
-import re
-import numpy as np
-import matplotlib.pyplot as plt
-from astropy.time import Time
-import pyshape.plotting_new as plot_rtn
-from pyshape import plotting,convinv
+#Last modified by @recannon 20/12/2025
+
+from pyshape import plotting
 from pyshape.mod.mod_io import modFile
 from pyshape.io_utils import logger
 

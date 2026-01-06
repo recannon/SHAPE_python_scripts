@@ -1,25 +1,32 @@
+#Last modified by @recannon 20/12/2025
+
+#This provides different artificial lightcurve data to SHAPE
+#SHAPE interpolates lightcurve data points from a dense line
+#This script does a sparser line but includes specific lightcurve points
+
 from .plot_lc_fit import plot_lc_fit
 from ..convinv import read_lctxt
 from .scattering_laws import scattering
 from .self_shadowing import apply_self_shadowing
 import numpy as np
-from astropy.time import Time
 import trimesh
 from ..io_utils import logger
 
 
-def lightcurve_generator(out_path, lc_file, T0, lam, bet, phi, P, Fn, FNA,
-                         V=None, F=None, shadowing=False, scattering_law='lambert', scattering_params=None, plot=True, show_plot=False):
+def pub_lightcurve_generator(out_path, lc_file, T0, lam, bet, phi, P, Fn, FNA,
+                         V=None, F=None, shadowing=False, 
+                         scattering_law='lambert', scattering_params=None, 
+                         plot=True, show_plot=False):
 
     #Read in lightcurve file
     lightcurves, calibrated = read_lctxt(lc_file)
     no_lightcurves = len(lightcurves)
 
     #Convert to radians and days
-    lam = np.radians(lam)
-    bet = np.radians(90-bet)
+    lam  = np.radians(lam)
+    bet  = np.radians(90-bet)
     phi0 = np.radians(phi)
-    P = P / 24.0
+    P    = P / 24.0
 
     #Construct trimesh object for ray-tracing
     if shadowing:
@@ -27,8 +34,9 @@ def lightcurve_generator(out_path, lc_file, T0, lam, bet, phi, P, Fn, FNA,
         mesh = trimesh.Trimesh(vertices=V,faces=F,process=False)
         mesh_centers = mesh.triangles_center
         mesh_extent = np.linalg.norm(mesh.extents)
-        #Characteristic length for offset
         eps = 1e-6 * np.linalg.norm(mesh.extents)
+        mesh_trace_origins = mesh_centers + eps * Fn
+        #^^Offset ray-tracing origins to avoid self-intersection
 
     #Set up the transformation matrices for lambda and beta
     Rlambda     = np.array([[ np.cos(lam), np.sin(lam), 0],
@@ -37,31 +45,33 @@ def lightcurve_generator(out_path, lc_file, T0, lam, bet, phi, P, Fn, FNA,
     Rbeta       = np.array([[np.cos(bet),  0, -np.sin(bet)],
                             [0,            1,  0],
                             [np.sin(bet),  0,  np.cos(bet)]])
-    
-    #Divide by largest number in matrix (in most cases, 1)
-    Rlambda /= np.linalg.norm(Rlambda,2)
-    Rbeta   /= np.linalg.norm(Rbeta,2)
 
     for i in range(no_lightcurves):
         print("")
-        logger.info(f'Lightcurve {i}')
+        logger.info(f'Lightcurve {i+1}')
         
         #Read lightcurve data and sun and earth vectors
         lc_data = lightcurves[i]
-        jds_lc  = lc_data[:,0]
-        mags_lc = lc_data[:,9]
-        t_0,t_fin = jds_lc[0],jds_lc[-1]    
-        lc_len =len(jds_lc)
-        sun_dir_mean = np.mean(lc_data[:,2:5], axis=0)
-        earth_dir_mean = np.mean(lc_data[:,5:8], axis=0)
-                
+        jds_lc, mags_lc = lc_data[:,0], lc_data[:,9]
+        t_0, t_fin = jds_lc[[0, -1]]
+        lc_len = len(jds_lc)
+        
         #Compute artificial lightcurve points as well
-        #This has room to try and add variable geometry purely by swapping out the tiles
         jds_art = np.linspace(t_0,t_0+P,200)
         jds_all = np.concatenate([jds_lc,jds_art])
         jds_all_len = len(jds_all)
-        earth_dir = np.tile(earth_dir_mean[:, None], (1, jds_all_len))
-        sun_dir   = np.tile(sun_dir_mean[:, None],   (1, jds_all_len))
+        
+        #Can swap for non-static geometry?
+        # earth_dir = lc_data[:,2:5].T
+        # sun_dir   = lc_data[:,5:8].T
+        sun_dir_mean = np.mean(lc_data[:,2:5], axis=0)
+        earth_dir_mean = np.mean(lc_data[:,5:8], axis=0)
+        # earth_dir = np.tile(earth_dir_mean[:, None], (1, jds_all_len))
+        # sun_dir   = np.tile(sun_dir_mean[:, None],   (1, jds_all_len))
+        earth_dir = np.broadcast_to(earth_dir_mean[:, None], (3, jds_all_len))
+        sun_dir   = np.broadcast_to(sun_dir_mean[:, None], (3, jds_all_len))
+
+        #Normal vectors
         earth_dir_n = earth_dir / np.linalg.norm(earth_dir,axis=0)
         sun_dir_n = sun_dir / np.linalg.norm(sun_dir,axis=0)
 
@@ -124,7 +134,7 @@ def lightcurve_generator(out_path, lc_file, T0, lam, bet, phi, P, Fn, FNA,
             params=scattering_params)
 
         if shadowing:
-            weights = apply_self_shadowing(mu,mu0,mesh,mesh_centers,mesh_extent,eps,Fn,earth_body,sun_body,weights)
+            weights = apply_self_shadowing(mu,mu0,mesh,mesh_trace_origins,mesh_extent,earth_body,sun_body,weights)
 
         #Sum flux values of all (relevant, see above clipping) facets, one value per timestep
         flux = np.sum(FNA[:,None]*weights, axis=0)
@@ -137,11 +147,12 @@ def lightcurve_generator(out_path, lc_file, T0, lam, bet, phi, P, Fn, FNA,
                 mag,
             ))
 
+        #Magnitude 0 point
         #Could think about weighting this with errors?
         delta_m = np.mean(mags_lc - art_lc_data[:lc_len, 3]) #Only lc points (not additional 200)
         art_lc_data[:,3] += delta_m         
 
         if plot:
-            plot_lc_fit(art_lc_data,lc_data,lc_phase_angle,lc_aspect_angle,i,out_path,show_plot)
+            plot_lc_fit(art_lc_data,lc_data,lc_phase_angle,lc_aspect_angle,i+1,out_path,show_plot)
 
     return True

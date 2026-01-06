@@ -1,7 +1,9 @@
-import numpy as np
+#Last modified by @recannon 20/12/2025
 
 #None of these have been extensively tested or checked.
 #All I can say is I THINK the form for each is right
+
+import numpy as np
 
 def lambert(mu, mu0, **kwargs):
     return mu * mu0

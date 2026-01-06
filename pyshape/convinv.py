@@ -1,3 +1,5 @@
+#Last modified by @recannon 20/12/2025
+
 from .io_utils import logger
 import numpy as np
 import re
@@ -133,7 +135,7 @@ def read_lctxt(filename):
             data = np.concatenate([data,errors[:,np.newaxis]],axis=1)
         
         #Calculate magnitude value for this intensity, and centre on 0
-        magnitudes = -2.5*np.log10(data[:,1])+5
+        magnitudes = -2.5*np.log10(data[:,1]) #+5 Why did I add this a while back?
         data = np.concatenate([data, magnitudes[:, np.newaxis]], axis=1)
         #Append data to lightcurves list
         lightcurves.append(data)

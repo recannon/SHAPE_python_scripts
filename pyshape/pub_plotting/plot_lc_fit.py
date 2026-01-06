@@ -1,3 +1,5 @@
+#Last modified by @recannon 06/01/2026
+
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.time import Time
@@ -40,7 +42,7 @@ def plot_lc_fit(art_lc_data,lc_data,solar_phase_angle,aspect_angle,i,out_path,sh
     ax.text(0.03,0.90,f"Phase Angle = {np.degrees(np.mean(solar_phase_angle)):.2f}$^o$",fontsize=text_size)
     ax.text(0.5+0.03,0.90,f"Aspect Angle = {np.degrees(np.mean(aspect_angle)):.1f}$^o$",fontsize=text_size)
     ax.text(0.03,-0.85,f"Model Peak-to-peak = {ymax-ymin:.2f}$^{{m}}$",fontsize=text_size)
-    ax.set_title(f'{i+1} $\\bullet$ {lc_start_date} $\\bullet {lc_start_jd:.3f}$ ',fontsize=title_size,pad=10)
+    ax.set_title(f'{i} $\\bullet$ {lc_start_date} $\\bullet {lc_start_jd:.3f}$ ',fontsize=title_size,pad=10)
     ax.set_xlabel('Rotational Phase',fontsize=label_size)
 
     #Format axes
