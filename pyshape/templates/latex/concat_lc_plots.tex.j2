@@ -1,23 +1,17 @@
-\documentclass{article}
+\documentclass[varwidth]{standalone}
 \usepackage[varg]{txfonts}
 \usepackage{graphicx}
-\usepackage{geometry}
-\geometry{left=0.2in, right=0.2in, top=0in, bottom=0in}
-
-\newcommand{\includelc}[1]{\includegraphics[trim=0cm 0cm 0cm 0cm, clip=true]{test_ASF_#1_fix.pdf}}
-
+\newcommand{\includelc}[1]{\includegraphics[trim=0cm 0cm 0cm 0cm, clip=true]{ArtLC_#1_fix.pdf}}
 \begin{document}
 
-\begin{figure*}[tbp]
-{% for row in lightcurves|batch(4, '') %}
-\resizebox{\hsize}{!}{
+{% for row in lightcurve_nos|batch(4, '') %}
+\resizebox{\linewidth}{!}{
   {%- for lc in row -%}
-    {% if lc != '' %}
+    {%- if lc != '' -%}
       \includelc{{ "{%02d}"|format(lc) }}
     {%- endif -%}
-  {% endfor %}
+  {%- endfor -%}
 }
 {% endfor %}
-\end{figure*}
 
 \end{document}

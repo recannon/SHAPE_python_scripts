@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 from pyshape.obs import obs_io
 from pyshape.io_utils import logger, error_exit, check_type
-from pyshape.plotting import quick_routines
+from pyshape.quick_plotting import quick_routines
 
 #python /path/to/write_fit.py modfile obsfile
 #python /path/to/write_fit.py lat lon (if pole scan, give values as strings, e.g +40 060. Files expected in mod/obsfiles) 

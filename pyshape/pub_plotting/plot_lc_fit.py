@@ -60,7 +60,7 @@ def plot_lc_fit(art_lc_data,lc_data,solar_phase_angle,aspect_angle,i,out_path,sh
         spine.set_linewidth(0.75)
 
     #Save fig
-    fig_name =f'{out_path}/test_ASF_{i:0>2}_fix.pdf'
+    fig_name =f'{out_path}/ArtLC_{i:0>2}_fix.pdf'
     
     plt.tight_layout()
     plt.savefig(fig_name)

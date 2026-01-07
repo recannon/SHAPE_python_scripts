@@ -3,32 +3,96 @@
 import subprocess
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
+import argparse
+import logging
+from ..io_utils import logger, error_exit, check_dir
 
-target     = '2000rs11'
-no         = '1'
-fig_path   = Path(f'/home/rcannon/Code/Radar/SHAPE/figures/{target}')
-model_dir  = Path(f'{fig_path}/M{no}')
-noLCs = 8
-no_col = 4
+def concat_lc_plots(figdir:Path, outdir:Path, pdf_name:str = 'Art_LC_Plots'):
 
-templates_dir = '/home/rcannon/Code/Radar/SHAPE/python_scripts/pyshape/templates/latex'
-env = Environment(
-    loader=FileSystemLoader(templates_dir),
-    autoescape=False   # IMPORTANT for LaTeX
-)
-template = env.get_template("concat_lc_plots.tex.j2")
+    #Setup jinja
+    script_dir = Path(__file__).resolve().parent
+    templates_dir = script_dir.parent / "templates" / "latex"
+    env = Environment(
+        loader=FileSystemLoader(templates_dir),
+        autoescape=False   # IMPORTANT for LaTeX
+    )
+    template = env.get_template("concat_lc_plots.tex.j2")
+    logger.debug('Loaded template')
 
-n_lightcurves = 8
-lightcurves = list(range(1, n_lightcurves + 1))
+    #Number of lightcurves and their numbers (range)
+    lightcurve_pdfs = sorted(figdir.glob("*.pdf"))
+    logger.debug(f'pdf files: \n {lightcurve_pdfs}')
+    n_lightcurves = len(lightcurve_pdfs)
+    lightcurve_nos = list(range(1, n_lightcurves + 1))
 
-latex = template.render(lightcurves=lightcurves)
-out_tex = model_dir / "Artificial_LC_Plots.tex"
-out_tex.write_text(latex)
+    #Create tex file
+    latex = template.render(lightcurve_nos=lightcurve_nos)
+    out_tex = figdir / f'{pdf_name}.tex'
+    out_tex.write_text(latex)
+    logger.info(f'Creating pdf from {out_tex}')
+    subprocess.run(["pdflatex", out_tex.name],
+                cwd=figdir, check=True, )
+                #stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) #Keeps errors
 
-out_pdf = model_dir / "Artificial_LC_Plots.pdf"
-subprocess.run(["pdflatex", f"-output-directory={model_dir}", out_tex.name],
-               cwd=model_dir, check=True)
+    #Move final pdf
+    out_pdf = figdir / f'{pdf_name}.pdf'
+    destination = outdir / out_pdf.name
+    out_pdf.replace(destination)
+    logger.info(f'Moved final pdf to {out_pdf}')
+    
+    return True
 
-out_pdf = model_dir / "Artificial_LC_Plots.pdf"
-destination = fig_path / out_pdf.name
-out_pdf.replace(destination)
+
+#===Functions for parsing args below this point===
+def parse_args():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(description="Combine LC plots generated with pub_lightcurve_generator")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Enable verbose output (sets log level to DEBUG)")
+    
+    #Combine args
+    arg_group = parser.add_argument_group('Arguments for creating combined figure')
+    arg_group.add_argument('--figdir',type=str,default=None,
+                            help='Directory containing individual LC PDFs')
+    arg_group.add_argument('--outdir',type=str,default=None,
+                            help='Output directory for combined PDF')
+    arg_group.add_argument("--name", type=str, default="Artificial_LC_Plots",
+                            help="Base name of output PDF (no extension)")
+    
+    return parser.parse_args()
+
+
+def validate_args(args):
+    
+    #Check verbose
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+        logger.debug('Verbose: Set level to DEBUG')
+
+    #Check directories exist
+    if not args.figdir:
+        error_exit('Must provide --figdir')
+    else:
+        args.figdir = check_dir(args.figdir)
+    
+    if not args.outdir:
+        error_exit('Must provide --outdir')
+    else:
+        args.outdir = check_dir(args.outdir)
+
+    return args
+
+
+#===Main===
+def main():
+
+    args = parse_args()
+    args = validate_args(args)
+
+    concat_lc_plots(args.figdir, args.outdir, args.name)
+
+    return True
+
+if __name__ == "__main__":
+    main()
+    
