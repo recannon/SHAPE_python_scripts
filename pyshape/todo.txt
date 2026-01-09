@@ -1,0 +1,5 @@
+1. Update jinja templating to work better with latex and standardise in io_utils
+2. Restructure class system for obs files
+3. CW Pub plots x axis ticks
+4. LC Pub plots y axis label
+

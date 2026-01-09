@@ -8,6 +8,7 @@ from pyshape.obs import obs_io
 from pyshape.io_utils import logger, error_exit, check_type
 import pyshape.plotting.pub_routines as pp
 from pyshape.utils import time_shape2astropy
+from jinja2 import Environment, FileSystemLoader
 
 def write_pub(modfile,obsfile,wparfile='par/wpar',outdir='test.pdf'):
 
@@ -29,7 +30,7 @@ def write_pub(modfile,obsfile,wparfile='par/wpar',outdir='test.pdf'):
 
     #Empty waction and pub folders without trying to remove directories
     subprocess.run('find waction/temp -maxdepth 1 -type f -exec rm {} +', shell=True, check=True)
-    subprocess.run('find waction/pub -maxdepth 1 -type f -exec rm {} +', shell=True, check=True)
+    subprocess.run('find waction/pub -maxdepth 1 -type f -exec rm {} +', shell=True)
 
     #Run write with shape (doesn't require moments)
     logger.info('Running write')
@@ -51,11 +52,15 @@ def write_pub(modfile,obsfile,wparfile='par/wpar',outdir='test.pdf'):
         
         cw_sets = [o for o in obs_sets if o.type=='doppler']
         cw_fits = sorted(temp_path.glob("fit_??_??.dat"))
+        pos_ppms = sorted(temp_path.glob('sky_??_??.ppm'))
         
-        for i, cw in enumerate(cw_fits):
+        cw_list = []
+        
+        #Create individual pdfs for each CW
+        for i, (cw,ppm) in enumerate(zip(cw_fits,pos_ppms)):
             
             entry_line = cw_sets[i].lines[-3]
-            print(entry_line)
+            logger.debug(f'{entry_line = }')
             date = " ".join(entry_line.split()[1:7])
             cw_start = time_shape2astropy(date)
             
@@ -64,9 +69,45 @@ def write_pub(modfile,obsfile,wparfile='par/wpar',outdir='test.pdf'):
             
             fig_title = f'{i+1} $\\bullet$ {start_date} $\\bullet {start_jd:.3f}$ '
             
-            #Create plot
-            pp.pub_doppler(cw,fig_title,save=pub_path/f'CW_{i+1}.pdf')
+            #Create fit plot
+            logger.info(f'Plotting {cw}')
+            fit_pdf = pub_path/f'CW_fit_{i+1}.pdf'
+            pp.pub_doppler(cw,fig_title,save=fit_pdf)
 
+            #Create pos pdf
+            pos_pdf = pub_path/f'CW_pos_{i+1}.pdf'
+            subprocess.run(["convert", ppm, pos_pdf], check=True)
+
+            cw_list.append({
+                "cw_pdf":  fit_pdf,
+                "pos_pdf": pos_pdf,
+            })
+
+        #Compile jinja template
+        script_dir = Path(__file__).resolve().parent
+        templates_dir = script_dir / "pyshape" / "templates" / "latex"
+        env = Environment(
+            loader=FileSystemLoader(templates_dir),
+            autoescape=False   # IMPORTANT for LaTeX
+        )
+        template = env.get_template("pub_cw_plots.tex.j2")
+
+        tex_output = template.render(cw_list=cw_list)
+
+        tex_file = pub_path / "cw_pos.tex"
+        tex_file.write_text(tex_output)        
+        
+        subprocess.run(["pdflatex", tex_file.name],
+                cwd=pub_path, check=True, )
+                #stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) #Keeps errors
+
+        #Move final pdf
+        out_pdf = pub_path / f'cw_pos.pdf'
+        destination = waction_path / out_pdf.name
+        out_pdf.replace(destination)
+        logger.info(f'Moved final pdf to {out_pdf}')
+        
+        
     # #Stack jpg files into a pdf
     # jpg_files = sorted(temp_path.glob("*.jpg"))
     # output_name = outdir / f"{identifier}.pdf"

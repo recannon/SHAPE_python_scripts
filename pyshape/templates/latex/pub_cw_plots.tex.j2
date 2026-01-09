@@ -1,0 +1,22 @@
+{% raw %}
+\documentclass[varwidth]{standalone}
+\usepackage[varg]{txfonts}
+\usepackage{graphicx}
+\newcommand{\panelheight}{3.6cm}
+\newcommand{\insertfig}[1]{\includegraphics[height=\panelheight]{#1}}
+{% endraw %}
+
+\begin{document}
+
+{% for row in cw_list|batch(2, none) %}
+\resizebox{\linewidth}{!}{
+{%- for e in row -%}
+  {% if e is not none %}
+    \insertfig{ {{ e.cw_pdf }} }
+    \insertfig{ {{ e.pos_pdf }} }
+  {% endif %}
+{%- endfor -%}
+}
+{% endfor %}
+
+\end{document}
