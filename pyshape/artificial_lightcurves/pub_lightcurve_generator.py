@@ -1,12 +1,12 @@
-#Last modified by @recannon 20/12/2025
+#Last modified by @recannon 09/01/2026
 
 #This provides different artificial lightcurve data to SHAPE
 #SHAPE interpolates lightcurve data points from a dense line
 #This script does a sparser line but includes specific lightcurve points
 
-from .plot_lc_fit import plot_lc_fit
+from ..plotting.pub_routines import pub_lightcurves
 from ..convinv import read_lctxt
-from .scattering_laws import scattering
+from .optical_scattering_laws import scattering
 from .self_shadowing import apply_self_shadowing
 import numpy as np
 import trimesh
@@ -153,6 +153,6 @@ def pub_lightcurve_generator(out_path, lc_file, T0, lam, bet, phi, P, Fn, FNA,
         art_lc_data[:,3] += delta_m         
 
         if plot:
-            plot_lc_fit(art_lc_data,lc_data,lc_phase_angle,lc_aspect_angle,i+1,out_path,show_plot)
+            pub_lightcurves(art_lc_data,lc_data,lc_phase_angle,lc_aspect_angle,i+1,out_path,show_plot)
 
     return True

@@ -3,7 +3,7 @@ Matplotlib
 Numpy
 Scipy
 Astropy
-Astroquery
+Astroquery (not yet)
 Trimesh
 jinja2
 rich

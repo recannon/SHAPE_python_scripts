@@ -1,19 +1,22 @@
-#Last modified by @recannon 20/12/2025
+#Last modified by @recannon 07/01/2026
 
-from pyshape import pub_plotting
+#Designed slightly counter intuitively to align with Agatas matlab script,
+#And to work with convex inversion (don't want the function to take my dataclass objects)
+
+from pyshape import artificial_lightcurves
 from pyshape.mod.mod_io import modFile
 from pyshape.io_utils import logger
-from pyshape import pub_plotting
+from pyshape import artificial_lightcurves
 from pathlib import Path
 import logging
 
 logger.setLevel(logging.INFO)
 
 target = '2000rs11'
-iden = 'FinalFit'
+iden = 'Brauer_SP'
 
 lc_filename  = Path(f"/cephfs/rcannon/{target}/lightcurves/{target}.lc.txt")
-mod_filename = Path(f"/home/rcannon/Code/Radar/SHAPE/{target}/PS2/FF/modfiles/FF.mod")
+mod_filename = Path(f"/home/rcannon/Code/Radar/SHAPE/{target}/Brauer_Fit_Checks/modfiles/SP.mod")
 
 #Requires figures to be in the same directory as python_scripts
 base_dir = Path(__file__).resolve().parent
@@ -39,7 +42,7 @@ scattering_law = mod_ol.type
 scattering_params = mod_ol.values_to_dict()
 
 #Create plots and output results dictionary (not done)
-results = pub_plotting.pub_lightcurve_generator(out_path,lc_filename,t0,lam,bet,phi,P,FN,FNa,V=V,F=F,shadowing=True,plot=True,show_plot=False)
+results = artificial_lightcurves.pub_lightcurve_generator(out_path,lc_filename,t0,lam,bet,phi,P,FN,FNa,V=V,F=F,shadowing=True,plot=True,show_plot=False)
 
 #Combine the figures
-pub_plotting.concat_lc_plots(out_path,out_path.parent,f'{iden}_ArtLCs')
+artificial_lightcurves.concat_lc_plots(out_path,out_path.parent,f'{iden}_ArtLCs')

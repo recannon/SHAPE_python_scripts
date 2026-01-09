@@ -1,4 +1,4 @@
-#Last modified 12/09/2025
+#Last modified by @recannon 07/01/2026
 
 from astropy.stats import sigma_clip
 import matplotlib.pyplot as plt
@@ -60,7 +60,7 @@ def quick_doppler(fit_files,no_cols=2,sigma_threshold=5,show=True,save=False):
         axs[i].plot(bins, fit_data, 'k-')
         axs[i].set_title(f'{" ".join(str(fit_files[i]).split("_")[-2:])}')
         
-        signal_thresh = sigma_threshold * sigma_clip(obs_data, sigma=3, maxiters=5).std()
+        signal_thresh = sigma_threshold * sigma_clip(obs_data, sigma=4, maxiters=1).std()
         signal_mask = obs_data > signal_thresh
 
         if np.any(signal_mask):
@@ -72,7 +72,6 @@ def quick_doppler(fit_files,no_cols=2,sigma_threshold=5,show=True,save=False):
             axs[i].set_xlim(min_bin - margin, max_bin + margin)
         else:
             axs[i].set_xlim(bins[0], bins[-1])  #plots everything if no signal
-        
 
     #Hide unused plots
     for j in range(n_plots, len(axs)):
