@@ -38,4 +38,4 @@ def time_shape2astropy(t: str) -> Time:
 
 def time_astropy2shape(t: Time) -> str:
     dt = t.to_datetime()
-    return f"{dt.year} {dt.month} {dt.day} {dt.hour} {dt.minute} {dt.second}"
+    return f"{dt.year: >4} {dt.month: >2} {dt.day: >2} {dt.hour: >2} {dt.minute: >2} {dt.second: >2}"

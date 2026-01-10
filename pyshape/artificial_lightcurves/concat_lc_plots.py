@@ -21,7 +21,7 @@ def concat_lc_plots(figdir:Path, outdir:Path, pdf_name:str = 'Art_LC_Plots'):
     logger.debug('Loaded template')
 
     #Number of lightcurves and their numbers (range)
-    lightcurve_pdfs = sorted(figdir.glob("*.pdf"))
+    lightcurve_pdfs = sorted(figdir.glob("ArtLC*.pdf"))
     logger.debug(f'pdf files: \n {lightcurve_pdfs}')
     n_lightcurves = len(lightcurve_pdfs)
     lightcurve_nos = list(range(1, n_lightcurves + 1))

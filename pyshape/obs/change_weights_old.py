@@ -1,41 +1,37 @@
-#Last modified by @recannon 10/01/2026
+#Last modified 03/05/2025
 
-from .obs_io import obsFile
+from . import obs_io_old
 import argparse
 from pathlib import Path
 import glob
-from ..cli_config import logger
 
 #python -m change_weights obsfiles cw 1e4 5 6 7
 #python -m change_weights obsfiles dd 0.5
 #python -m change_weights test.obs lc 100
 
-def change_weights(fname,obs_type,new_weights,sets_affected=None):
+def change_weights(fname,obs_type,new_weights,sets_affected=[]):
 
     #Load obs file
-    obs_file = obsFile.from_file(fname)
+    set_list = obs_io_old.read(fname)
 
     change_type = {'dd' : 'delay-doppler',
                    'lc' : 'lightcurve',
                    'cw' : 'doppler'}
     obs_type = change_type[obs_type]
    
-    datasets = obs_file.datasets
-    
-    if not sets_affected:
-        sets_affected = list(range(len(datasets)))
+    if sets_affected == []:
+        sets_affected = list(range(len(set_list)))
 
     #change weights
-    for obs_set in datasets:
+    for obs_set in set_list:
         #Check type and sets to affect
-        if obs_set.set_type == obs_type and obs_set.set_no in sets_affected:            
-            obs_set.set_weights(new_weights)
+        if obs_set.type == obs_type and obs_set.setno in sets_affected:
+            obs_set.change_weights(new_weights)
         else:
             continue
 
-
     #Save file
-    obs_file.write(fname)
+    obs_io_old.write(fname,set_list)
     return 1
 
 
@@ -53,13 +49,13 @@ def main():
     args = parser.parse_args()
 
     if Path(args.fname).is_file():
-        logger.info(f'Changing {args.fname}')
+        print(f'Changing {args.fname}')
         change_weights(*vars(args).values())
     elif Path(args.fname).is_dir():
-        logger.info(f'Changing directory of files: {args.fname}')
+        print('Directory of files')
         obsfiles = glob.glob(f'{args.fname}/*.obs')
         for obs in obsfiles:
-            logger.debug(f'Changing {obs}')
+            print(f'Changing {obs}')
             change_weights(obs,args.obs_type,args.new_weights,args.components)
     else:
         raise FileNotFoundError('Cannot find file or directory with name [fname]')

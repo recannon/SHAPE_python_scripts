@@ -9,6 +9,8 @@ from pyshape.cli_config import logger, error_exit
 import pyshape.plotting.pub_routines as pp
 from pyshape.utils import time_shape2astropy, check_file
 from pyshape.jinja_env import template_env
+from pyshape.mod.mod_io import modFile
+from pyshape import artificial_lightcurves
 
 def write_pub(modfile,obsfile,wparfile='par/wpar',outpdf=None):
 
@@ -103,6 +105,39 @@ def write_pub(modfile,obsfile,wparfile='par/wpar',outpdf=None):
         destination = current_path / out_pdf.name
         out_pdf.replace(destination)
         logger.info(f'Moved final pdf to {out_pdf}')
+        
+    if 'lightcurve' in set_types:
+                
+        lc_filename  = Path(f"/cephfs/rcannon/2000rs11/lightcurves/2000rs11.lc.txt")
+                
+        #Read modfile for spin state, scattering laws, and shape
+        mod_info = modFile.from_file(modfile)
+        mod_vx = mod_info.components[0]
+        V,F,FN,FNa = mod_vx.vertices, mod_vx.facets, mod_vx.FN, mod_vx.FNa
+        mod_ss = mod_info.spinstate
+        t0,P = mod_ss.t0.jd, mod_ss.P
+        lam,bet,phi = mod_ss.lam, mod_ss.bet, mod_ss.phi+90
+
+        #Assume there is only one optical scattering law
+        #Though test for if it exists (More likely to have 0 than 2+)
+        try:
+            mod_ol = mod_info.phot_functions[1][0]
+        except (KeyError, IndexError):
+            raise RuntimeError("No optical scattering law found in mod file")
+        scattering_law = mod_ol.type
+        scattering_params = mod_ol.values_to_dict()
+
+        #Create plots and output results dictionary (not done)
+        results = artificial_lightcurves.pub_lightcurve_generator(pub_path,lc_filename,t0,lam,bet,phi,P,FN,FNa,V=V,F=F,shadowing=True,plot=True,show_plot=False)
+
+        if not outpdf:
+            out_stem = f'PubLC_{identifier}'
+        elif outpdf:
+            out_stem = outpdf.replace('.pdf','')
+
+        #Combine the figures
+        artificial_lightcurves.concat_lc_plots(pub_path,current_path,out_stem)
+        
         
         
     # #Stack jpg files into a pdf
