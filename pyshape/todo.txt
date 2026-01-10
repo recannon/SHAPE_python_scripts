@@ -8,3 +8,4 @@
 7. Look at write_fit for many potential improvements. Rename to write_quick?
 8. Mod Freeze state needs updating for anything other than e or v
 9. Update cli_config and logger to be in a function
+11.

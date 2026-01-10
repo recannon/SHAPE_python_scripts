@@ -1,4 +1,4 @@
-#Last modified by @recannon on 09/01/2026
+#Last modified by @recannon on 10/01/2026
 
 import argparse
 import logging
@@ -8,9 +8,9 @@ from pyshape.obs import obs_io
 from pyshape.cli_config import logger, error_exit
 import pyshape.plotting.pub_routines as pp
 from pyshape.utils import time_shape2astropy, check_file
-from pyshape.jinja_env import templates_env
+from pyshape.jinja_env import template_env
 
-def write_pub(modfile,obsfile,wparfile='par/wpar',outdir='test.pdf'):
+def write_pub(modfile,obsfile,wparfile='par/wpar',outpdf=None):
 
     current_path = Path.cwd()
     waction_path = current_path / 'waction'
@@ -83,11 +83,15 @@ def write_pub(modfile,obsfile,wparfile='par/wpar',outdir='test.pdf'):
                 "pos_pdf": pos_pdf,
             })
 
-        template = templates_env.get_template("pub_cw_plots.tex.j2")
+        if not outpdf:
+            out_stem = f'PubCW_{identifier}'
+        elif outpdf:
+            out_stem = outpdf.replace('.pdf','')
 
+        template = template_env.get_template("pub_cw_plots.tex.j2")
         tex_output = template.render(cw_list=cw_list)
 
-        tex_file = pub_path / "cw_pos.tex"
+        tex_file = pub_path / f'{out_stem}.tex'
         tex_file.write_text(tex_output)        
         
         subprocess.run(["pdflatex", tex_file.name],
@@ -95,8 +99,8 @@ def write_pub(modfile,obsfile,wparfile='par/wpar',outdir='test.pdf'):
                 stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) #Keeps errors
 
         #Move final pdf
-        out_pdf = pub_path / f'cw_pos.pdf'
-        destination = waction_path / out_pdf.name
+        out_pdf = pub_path / f'{out_stem}.pdf'
+        destination = current_path / out_pdf.name
         out_pdf.replace(destination)
         logger.info(f'Moved final pdf to {out_pdf}')
         
@@ -123,14 +127,14 @@ def parse_args():
     input_group.add_argument("obsfile", type=str, nargs='?', help="obsfile to write.")
     
     data_group = parser.add_argument_group('Specify which data types to create pdfs for. Default: all')
-    data_group.add_argument("-lc", action="store_true", help="Lightcurves")
+    data_group.add_argument("-lc", action="store_true", help="LC data")
     data_group.add_argument("-cw", action="store_true", help="CW data")
     
     optional_group = parser.add_argument_group('Optional input parameters')
     optional_group.add_argument("-w", "--wparfile", type=Path, default='./par/wpar',
                         help="wpar file to use. Default cwd/par/wpar")
-    optional_group.add_argument("-o",'--outdir', type=Path, default='.',
-                        help="Directory to save fits. Default cwd")
+    optional_group.add_argument("-o",'--outpdf', type=str, default=None,
+                        help="Name of pdf saved. Default Pub{dtype}_{identifier}.pdf")
 
     return parser.parse_args()
 
@@ -144,10 +148,6 @@ def validate_args(args):
     #Check optional inputs
     if not args.wparfile.is_file():
         error_exit(f'Cannot find given wparfile: {args.wparfile}')
-    if not args.outdir.is_dir():
-        args.outdir.mkdir()
-        logger.debug(f'Created output directory {args.outdir}')
-        # error_exit(f'Cannot find given output directory: {args.outdir}')
 
     if not args.modfile or not args.obsfile:
         error_exit('Must provide both obsfile and modfile')
@@ -163,7 +163,7 @@ def main():
     
     logger.info(f"Processing: {args.modfile} and {args.obsfile}")
     write_pub(args.modfile, args.obsfile,
-                args.wparfile, args.outdir)
+                args.wparfile, args.outpdf)
 
 if __name__ == "__main__":
     main()

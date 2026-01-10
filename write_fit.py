@@ -1,4 +1,4 @@
-#Last modified by @recannon on 12/09/2025
+#Last modified by @recannon on 10/01/2026
 
 import argparse
 import logging
@@ -7,7 +7,7 @@ import subprocess
 from pyshape.obs import obs_io
 from pyshape.cli_config import logger, error_exit
 from pyshape.utils import check_type
-from pyshape.quick_plotting import quick_routines
+from pyshape.plotting import quick_routines as qp
 
 #python /path/to/write_fit.py modfile obsfile
 #python /path/to/write_fit.py lat lon (if pole scan, give values as strings, e.g +40 060. Files expected in mod/obsfiles) 
@@ -114,12 +114,12 @@ def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.'
     if 'lightcurve' in set_types:
         lc_fits = sorted(temp_path.glob("fit_??.dat"))
         #Create lightcurve plot
-        quick_routines.quick_lightcurves(lc_fits, show=False, save=temp_path / '3_lc_fits.jpg')
+        qp.quick_lightcurves(lc_fits, show=False, save=temp_path / '3_lc_fits.jpg')
 
     if 'doppler' in set_types:
         cw_fits = sorted(temp_path.glob("fit_??_??.dat"))
         #Create plot
-        quick_routines.quick_doppler(cw_fits, show=False, save=temp_path / '4_cw_fits.jpg')
+        qp.quick_doppler(cw_fits, show=False, save=temp_path / '4_cw_fits.jpg')
 
     #Stack jpg files into a pdf
     jpg_files = sorted(temp_path.glob("*.jpg"))

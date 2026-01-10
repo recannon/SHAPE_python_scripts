@@ -6,7 +6,7 @@ from .utils import time_astropy2shape
 
 #Paths
 script_dir = Path(__file__).resolve().parent
-templates_dir = script_dir.parent / "templates"
+templates_dir = script_dir / "templates"
 mod_templates   = templates_dir / "mod"
 tex_templates = templates_dir / "latex"
 
