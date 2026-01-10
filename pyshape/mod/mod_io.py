@@ -1,21 +1,13 @@
-#Last modified by @recannon 06/01/2026
+#Last modified by @recannon 10/01/2026
 
 from dataclasses import dataclass
 from typing import ClassVar, Literal
 from astropy.time import Time
-from ..io_utils import logger,error_exit
+from ..cli_config import logger,error_exit
 from ..utils import time_shape2astropy,time_astropy2shape
 import numpy as np
-from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
-
-script_dir = Path(__file__).resolve().parent
-templates_dir = script_dir.parent / "templates" / "mod"
-env = Environment(loader=FileSystemLoader(templates_dir))
-env.filters["fmt"] = format
-env.globals["zip"] = zip
-env.globals["enumerate"] = enumerate
-env.globals["cnvrt_time"] = time_astropy2shape
+from ..jinja_env import templates_env
 
 class modFile:
     
@@ -280,7 +272,7 @@ class ModSpinState(FreezeAwareBase):
     def to_lines(self):
         logger.debug('Writing spin state')
         
-        spinstate_template = env.get_template("mod_spinstate.txt.j2")
+        spinstate_template = templates_env.get_template("mod_spinstate.txt.j2")
         new_ss_lines = spinstate_template.render(spin_state=self)
         
         return new_ss_lines.splitlines(keepends=True)
@@ -306,7 +298,7 @@ class ModOpticalLaw(FreezeAwareBase):
     def to_lines(self,idx):
         logger.debug(f'Writing optical law (no {idx})')
         
-        optical_template = env.get_template("mod_opticallaw.txt.j2")
+        optical_template = templates_env.get_template("mod_opticallaw.txt.j2")
         new_ol_lines = optical_template.render(optical_law=self,law_no=idx)
         
         return new_ol_lines.splitlines(keepends=True)
@@ -331,7 +323,7 @@ class ModRadarLaw(FreezeAwareBase):
     def to_lines(self,idx):
         logger.debug(f'Writing radar law (no {idx})')
         
-        radar_template = env.get_template("mod_radarlaw.txt.j2")
+        radar_template = templates_env.get_template("mod_radarlaw.txt.j2")
         new_rl_lines = radar_template.render(radar_law=self,law_no=idx)
         
         return new_rl_lines.splitlines(keepends=True)
@@ -375,7 +367,7 @@ class ModEllipse(FreezeAwareBase):
     def to_lines(self,idx):
         logger.debug(f'Writing ellipse (component {idx})')
         
-        ellipse_template = env.get_template("mod_ellipse.txt.j2")
+        ellipse_template = templates_env.get_template("mod_ellipse.txt.j2")
         new_e_lines = ellipse_template.render(component=self,comp_no=idx)
         
         return new_e_lines.splitlines(keepends=True)
@@ -422,7 +414,7 @@ class ModHarmonic(FreezeAwareBase):
     def to_lines(self,idx):
         logger.debug(f'Writing harmonic (component {idx})')
         
-        harmonic_template = env.get_template("mod_harmonic.txt.j2")
+        harmonic_template = templates_env.get_template("mod_harmonic.txt.j2")
         new_h_lines = harmonic_template.render(component=self,comp_no=idx)
         
         return new_h_lines.splitlines(keepends=True)
@@ -532,7 +524,7 @@ class ModVertex(FreezeAwareBase):
     def to_lines(self,idx):
         logger.debug(f'Writing vertex (component {idx})')
         
-        vertex_template = env.get_template("mod_vertex.txt.j2")
+        vertex_template = templates_env.get_template("mod_vertex.txt.j2")
         new_v_lines = vertex_template.render(component=self,comp_no=idx)
         
         return new_v_lines.splitlines(keepends=True)

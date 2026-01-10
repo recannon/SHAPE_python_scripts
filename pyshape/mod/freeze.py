@@ -4,7 +4,7 @@ import argparse
 import glob
 import logging
 from pathlib import Path
-from ..io_utils import logger, error_exit
+from ..cli_config import logger, error_exit
 from .mod_io import modFile
 
 #python -m freeze_mod modfiles v 1

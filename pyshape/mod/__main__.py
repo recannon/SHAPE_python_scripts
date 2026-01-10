@@ -1,6 +1,6 @@
 #Last modified 13/09/2025
 
-from ..io_utils import console,safe_exit
+from ..cli_config import console,safe_exit
 
 def main():
     

@@ -8,7 +8,7 @@ import shutil
 import subprocess
 from pathlib import Path
 import numpy as np
-from ..io_utils import logger, error_exit
+from ..cli_config import logger, error_exit
 from .. import utils, mod
 
 #python -m line_scan -z 0.9 1.1 0.02

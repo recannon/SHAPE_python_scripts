@@ -4,7 +4,7 @@ import dataclasses
 import glob
 import numpy as np
 from .. import log_file
-from ..io_utils import logger,error_exit
+from ..cli_config import logger,error_exit
 
 #===Read polescans===
 def polescan_results(scan_dir):

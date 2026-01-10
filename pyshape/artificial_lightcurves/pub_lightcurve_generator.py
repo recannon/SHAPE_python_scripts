@@ -10,7 +10,7 @@ from .optical_scattering_laws import scattering
 from .self_shadowing import apply_self_shadowing
 import numpy as np
 import trimesh
-from ..io_utils import logger
+from ..cli_config import logger
 
 
 def pub_lightcurve_generator(out_path, lc_file, T0, lam, bet, phi, P, Fn, FNA,

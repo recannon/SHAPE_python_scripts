@@ -5,7 +5,8 @@ import logging
 from pathlib import Path
 import subprocess
 from pyshape.obs import obs_io
-from pyshape.io_utils import logger, error_exit, check_type
+from pyshape.cli_config import logger, error_exit
+from pyshape.utils import check_type
 from pyshape.quick_plotting import quick_routines
 
 #python /path/to/write_fit.py modfile obsfile

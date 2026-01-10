@@ -5,7 +5,8 @@ from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 import argparse
 import logging
-from ..io_utils import logger, error_exit, check_dir
+from ..cli_config import logger, error_exit
+from ..utils import check_dir
 
 def concat_lc_plots(figdir:Path, outdir:Path, pdf_name:str = 'Art_LC_Plots'):
 
@@ -31,8 +32,8 @@ def concat_lc_plots(figdir:Path, outdir:Path, pdf_name:str = 'Art_LC_Plots'):
     out_tex.write_text(latex)
     logger.info(f'Creating pdf from {out_tex}')
     subprocess.run(["pdflatex", out_tex.name],
-                cwd=figdir, check=True, )
-                #stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) #Keeps errors
+                cwd=figdir, check=True,
+                stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) #Keeps errors
 
     #Move final pdf
     out_pdf = figdir / f'{pdf_name}.pdf'

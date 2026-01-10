@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.time import Time
-from ..io_utils import logger
+from ..cli_config import logger
 from astropy.stats import sigma_clip
 
 # Colorblind-friendly colors
@@ -48,7 +48,8 @@ def pub_lightcurves(art_lc_data,lc_data,solar_phase_angle,aspect_angle,i,out_pat
     ax.text(0.5+0.03,0.90,f"Aspect = {np.degrees(np.mean(aspect_angle)):.1f}$^o$",fontsize=text_size)
     ax.text(0.03,-0.80,rf"$\Delta m$ = {ymax-ymin:.2f}",fontsize=text_size)
     ax.set_title(f'{i} $\\bullet$ {lc_start_date} $\\bullet {lc_start_jd:.3f}$ ',fontsize=title_size,pad=10)
-    ax.set_xlabel('Rotational Phase',fontsize=label_size)
+    ax.set_xlabel('Rot. Phase',fontsize=label_size)
+    ax.set_ylabel('Rel. Mag', fontsize=label_size)
 
     #Format axes
     xticks = np.linspace(0,1,6)

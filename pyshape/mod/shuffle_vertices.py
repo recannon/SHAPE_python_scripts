@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 import numpy as np
 from . import mod_io
-from ..io_utils import logger, error_exit
+from ..cli_config import logger, error_exit
 
 #python -m convert_type modfiles -vmod 500 n 
 #python -m convert_type test.mod -hmod 5 30 

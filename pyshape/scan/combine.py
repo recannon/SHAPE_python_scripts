@@ -5,7 +5,8 @@ import logging
 from pathlib import Path
 import shutil
 import numpy as np
-from ..io_utils import logger,error_exit,check_dir
+from ..cli_config import logger,error_exit
+from ..utils import check_dir
 from . import scan_io
 
 

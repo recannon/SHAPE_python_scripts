@@ -1,29 +1,10 @@
-#Last modified 12/09/2025
+#Last modified by @recannon 10/01/2026
 
 import logging
-from pathlib import Path
 import sys
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.theme import Theme
-
-#===Helper functions for checking input arguments
-def check_type(par,par_name,req_type):
-    try:
-        return req_type(par)
-    except:
-        error_exit(f"{par_name} must be of type {req_type.__name__} (got '{par}')")
-
-def check_dir(path, must_exist=True):
-    """Convert to Path and check it's a directory (if required)."""
-    path = Path(path)
-    if must_exist:
-        if not path.exists():
-            error_exit(f"Directory does not exist: {path}")
-        if not path.is_dir():
-            error_exit(f"Not a directory: {path}")
-    return path
-
 
 #===Clean exit functions===
 def error_exit(message):
@@ -33,8 +14,7 @@ def error_exit(message):
 def safe_exit(message=None):
     if message:
         logger.info(message)
-    sys.exit(1)
-
+    sys.exit(0)
 
 #===Consistent logger and console===
 custom_theme = Theme({
@@ -69,4 +49,3 @@ logging.getLogger("zarr").setLevel(logging.WARNING)
 logging.getLogger("dask").setLevel(logging.WARNING)
 logger = logging.getLogger('pyshape')
 logger.setLevel(logging.INFO)
-

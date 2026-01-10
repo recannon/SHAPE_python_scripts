@@ -1,5 +1,10 @@
-1. Update jinja templating to work better with latex and standardise in io_utils
 2. Restructure class system for obs files
-3. CW Pub plots x axis ticks
-4. LC Pub plots y axis label
-
+    2.1 Freeze still works
+    2.2 CW Pubplot can read correct times
+3. CW Pub plots x axis ticks (linked to [2.]?)
+4. CW Pub plots include SC/OC ratio (and radar cross?)
+5. LC Pub plots y axis label (done, needs checking)
+6. LC Pub plots using waction/pub rather than ~/figures (integrate into write_pub)
+7. Look at write_fit for many potential improvements. Rename to write_quick?
+8. Mod Freeze state needs updating for anything other than e or v
+9. Update cli_config and logger to be in a function

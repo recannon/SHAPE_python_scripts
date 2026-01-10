@@ -10,8 +10,8 @@ import matplotlib.ticker as mticker
 import matplotlib.tri as tri
 import numpy as np
 from scipy.interpolate import griddata
-from ..io_utils import logger, error_exit
-from .. import io_utils
+from ..cli_config import logger, error_exit
+from ..utils import check_dir, check_type
 from . import scan_io
 
 def pub_gridscan(bet:np.array, lam:np.array, chi:np.array, 
@@ -156,7 +156,7 @@ def validate_args(args):
     #Check directory exists and has files in
     if not args.dirname:
         args.dirname = '.'
-    args.dirname = io_utils.check_dir(args.dirname)
+    args.dirname = check_dir(args.dirname)
     no_files = len([f for f in args.dirname.iterdir() if f.is_file()])
     if no_files == 0:
         error_exit(f'Directory {args.dirname} has no files in')
@@ -167,7 +167,7 @@ def validate_args(args):
     #Maxlevel
     if not args.max_level:
         args.max_level = 1.1
-    args.max_level = io_utils.check_type(args.max_level,'--max-level',float) 
+    args.max_level = check_type(args.max_level,'--max-level',float) 
 
     return args
 

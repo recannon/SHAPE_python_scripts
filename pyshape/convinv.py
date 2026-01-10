@@ -1,6 +1,6 @@
 #Last modified by @recannon 20/12/2025
 
-from .io_utils import logger
+from .cli_config import logger
 import numpy as np
 import re
 

@@ -5,10 +5,10 @@ import logging
 from pathlib import Path
 import subprocess
 from pyshape.obs import obs_io
-from pyshape.io_utils import logger, error_exit, check_type
+from pyshape.cli_config import logger, error_exit
 import pyshape.plotting.pub_routines as pp
-from pyshape.utils import time_shape2astropy
-from jinja2 import Environment, FileSystemLoader
+from pyshape.utils import time_shape2astropy, check_file
+from pyshape.jinja_env import templates_env
 
 def write_pub(modfile,obsfile,wparfile='par/wpar',outdir='test.pdf'):
 
@@ -83,14 +83,7 @@ def write_pub(modfile,obsfile,wparfile='par/wpar',outdir='test.pdf'):
                 "pos_pdf": pos_pdf,
             })
 
-        #Compile jinja template
-        script_dir = Path(__file__).resolve().parent
-        templates_dir = script_dir / "pyshape" / "templates" / "latex"
-        env = Environment(
-            loader=FileSystemLoader(templates_dir),
-            autoescape=False   # IMPORTANT for LaTeX
-        )
-        template = env.get_template("pub_cw_plots.tex.j2")
+        template = templates_env.get_template("pub_cw_plots.tex.j2")
 
         tex_output = template.render(cw_list=cw_list)
 
@@ -98,8 +91,8 @@ def write_pub(modfile,obsfile,wparfile='par/wpar',outdir='test.pdf'):
         tex_file.write_text(tex_output)        
         
         subprocess.run(["pdflatex", tex_file.name],
-                cwd=pub_path, check=True, )
-                #stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) #Keeps errors
+                cwd=pub_path, check=True,
+                stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) #Keeps errors
 
         #Move final pdf
         out_pdf = pub_path / f'cw_pos.pdf'
@@ -128,8 +121,10 @@ def parse_args():
     input_group = parser.add_argument_group('Compulsory input files')    
     input_group.add_argument("modfile", type=str, nargs='?', help="modfile to write.")
     input_group.add_argument("obsfile", type=str, nargs='?', help="obsfile to write.")
-    input_group.add_argument("--all", action="store_true",
-                        help="Run write_fit for all files in namecores.txt")
+    
+    data_group = parser.add_argument_group('Specify which data types to create pdfs for. Default: all')
+    data_group.add_argument("-lc", action="store_true", help="Lightcurves")
+    data_group.add_argument("-cw", action="store_true", help="CW data")
     
     optional_group = parser.add_argument_group('Optional input parameters')
     optional_group.add_argument("-w", "--wparfile", type=Path, default='./par/wpar',
@@ -154,33 +149,11 @@ def validate_args(args):
         logger.debug(f'Created output directory {args.outdir}')
         # error_exit(f'Cannot find given output directory: {args.outdir}')
 
-    #If all, don't check modfile/obsfile
-    if args.all:
-        if not Path('./namecores.txt').is_file():
-            error_exit('Used --all but cannot find ./namecores.txt')
-        if args.modfile or args.obsfile:
-            logger.warning('Found modefile or obsfile provided with --all. Ignoring provided files')
-
-    elif not args.modfile or not args.obsfile:
-        error_exit('Must provide both obsfile and modfile (or use --all)')
-    
+    if not args.modfile or not args.obsfile:
+        error_exit('Must provide both obsfile and modfile')
     else:
-        try: #Try turn into integers. If your file names are only integers it is a bit silly
-            lat,lon = int(args.modfile), int(args.obsfile)
-
-            logger.info('Super secret polescan mode activated')
-            args.modfile = Path('modfiles') / f'lat{lat:+03d}lon{lon:03d}.mod'
-            args.obsfile = Path('obsfiles') / f'lat{lat:+03d}lon{lon:03d}.obs'
-        
-        except: #Normal running mode
-            args.modfile = Path(args.modfile)
-            args.obsfile = Path(args.obsfile)
-            
-        #Check files exist
-        if not args.modfile.is_file():
-            error_exit(f'Cannot find given modfile: {args.modfile}')
-        if not args.obsfile.is_file():
-            error_exit(f'Cannot find given obsfile: {args.obsfile}')
+        args.modfile = check_file(args.modfile)
+        args.obsfile = check_file(args.obsfile)
     
     return args
 
@@ -188,33 +161,9 @@ def main():
     args = parse_args()
     args = validate_args(args)    
     
-    if args.all:
-        logger.info("Running in --all mode. Processing all files from namecores.txt")
-        with open('./namecores.txt') as f:
-            namecores = [line.strip() for line in f if line.strip()]
-
-        for namecore in namecores:
-            modfile = Path("modfiles") / f"{namecore}.mod"
-            obsfile = Path("obsfiles") / f"{namecore}.obs"
-            
-            if not modfile.is_file():
-                logger.warning(f'Cannot find {modfile}. Skipping')
-                continue
-            if not obsfile.is_file():
-                logger.warning(f'Cannot find {obsfile}. Skipping')
-            
-            logger.info(f"Processing: {modfile} and {obsfile}")
-            write_pub(modfile, obsfile,
-                      args.wparfile, args.outdir,)
-
-    elif args.modfile and args.obsfile:
-        
-        logger.info(f"Processing: {args.modfile} and {args.obsfile}")
-        write_pub(args.modfile, args.obsfile,
-                  args.wparfile, args.outdir)
-
-    else:
-        error_exit("This message shouldn't appear so it is time to cry")
+    logger.info(f"Processing: {args.modfile} and {args.obsfile}")
+    write_pub(args.modfile, args.obsfile,
+                args.wparfile, args.outdir)
 
 if __name__ == "__main__":
     main()

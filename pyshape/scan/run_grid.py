@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 from rich.progress import Progress
 from ..mod.mod_io import modFile
-from ..io_utils import logger, error_exit, console
+from ..cli_config import logger, error_exit, console
 from . import scan_io
 
 #python -m pyshape.scan.run_grid -ps -90 90 10 0 360 10 -mod mod.h.template -obs obs.h.template
