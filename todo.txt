@@ -1,6 +1,8 @@
 4. CW Pub plots include SC/OC ratio (and radar cross?)
-7. Look at write_fit for many potential improvements. Rename to write_quick?
 9. Update cli_config and logger to be in a function
 11. Merge concatenation for CW and LCs?
 13. LC Pub Plots in write_pub finding lightcurve file by itself (currently hard coded)
 14. Harmonic (and vertex?) template don't have meta info
+15. Documentation update
+16. Add delay-Doppler to write_pub (identical functionality to write_quick but with page breaks?)
+17. Deal with DD in write_quick (same as [16.]?)
