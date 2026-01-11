@@ -79,36 +79,44 @@ def pub_lightcurves(art_lc_data,lc_data,solar_phase_angle,aspect_angle,i,out_pat
     logger.debug('Done')
     return 1
 
-def pub_doppler(fit_file,fig_title,sigma_threshold=5,show=True,save=False):
+def pub_doppler(fit_file,dop_info,fig_title,sigma_threshold=5,show=True,save=False):
 
     text_size = 30
     title_size = 30
     label_size = 30
 
+    #x axis ticks
+    com_idx = int(dop_info[2]) - 1
+    bins = np.arange(dop_info[0])
+    freq = (bins - com_idx) * dop_info[1]
+
     fig, ax = plt.subplots(dpi=300)
     fig.set_figheight(FIG_HEIGHT)
     fig.set_figwidth(FIG_WIDHT)
     
-    bins, obs_data, fit_data, res = np.loadtxt(fit_file,unpack=True)
+    _, obs_data, fit_data, res = np.loadtxt(fit_file,unpack=True)
 
-    ax.plot(bins, obs_data, 'o', color=CBred)
-    ax.plot(bins, fit_data, '-', color='black', lw=0.8)
+    ax.plot(freq, obs_data, 'o', color=CBred)
+    ax.plot(freq, fit_data, '-', color='black', lw=0.8)
     ax.set_title(fig_title, fontsize=title_size)
     
     signal_thresh = sigma_threshold * sigma_clip(obs_data, sigma=4, maxiters=1).std()
     signal_mask = obs_data > signal_thresh
 
     if np.any(signal_mask):
-        signal_bins = bins[signal_mask]
-        min_bin = signal_bins.min()
-        max_bin = signal_bins.max()
-        margin = 10
-        ax.set_xlim(min_bin - margin, max_bin + margin)
+        signal_freq = freq[signal_mask]
+        min_freq = signal_freq.min()
+        max_freq = signal_freq.max()
+        margin = 10 * dop_info[1] #10 bins
+        ax.set_xlim(min_freq - margin, max_freq + margin)
     else:
-        ax.set_xlim(bins[0], bins[-1])  #plots everything if no signal
+        ax.set_xlim(freq[0], freq[-1])  #plots everything if no signal
 
     ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True, 
                     width=0.75, length=6, labelsize=label_size, pad=10)
+    ax.set_xlabel('Doppler freq. [Hz]',fontsize=label_size, labelpad=0)
+    ax.set_ylabel("Echo Power [St'd devs]", fontsize=label_size, labelpad=0)
+
     for spine in ax.spines.values():
         spine.set_linewidth(0.75)
 

@@ -1,6 +1,6 @@
-2. Restructure class system for obs files
-    2.1 Freeze still works
-    2.2 CW Pubplot can read correct times
+2. Restructure class system for obs files (done)
+    2.1 Change weights still works (done)
+    2.2 CW Pubplot can read correct times (needs updating)
 3. CW Pub plots x axis ticks (linked to [2.]?)
 4. CW Pub plots include SC/OC ratio (and radar cross?)
 7. Look at write_fit for many potential improvements. Rename to write_quick?

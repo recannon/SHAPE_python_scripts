@@ -1,10 +1,10 @@
-#Last modified by @recannon on 11/01/2026
+#Last modified by @recannon on 10/01/2026
 
 import argparse
 import logging
 from pathlib import Path
 import subprocess
-from pyshape.obs.obs_io import obsFile
+from pyshape.obs import obs_io_old
 from pyshape.cli_config import logger, error_exit
 import pyshape.plotting.pub_routines as pp
 from pyshape.utils import time_shape2astropy, check_file
@@ -47,49 +47,43 @@ def write_pub(modfile,obsfile,wparfile='par/wpar',outpdf=None):
     logger.info('Creating pdfs')
     
     #Read obsfile to check for which data types are present
-    obs_file = obsFile.from_file(obsfile)
-    obs_sets = obs_file.datasets
-    set_types = set(o.set_type for o in obs_sets) 
+    obs_sets  = obs_io_old.read(obsfile)
+    set_types = set(obs_set.type for obs_set in obs_sets) 
     
     if 'doppler' in set_types:
-            
-        cw_sets = [o for o in obs_sets if o.set_type == 'doppler']
-        cw_list = []
-        fig_count = 0
         
-        for cw in cw_sets:
+        cw_sets = [o for o in obs_sets if o.type=='doppler']
+        cw_fits = sorted(temp_path.glob("fit_??_??.dat"))
+        pos_ppms = sorted(temp_path.glob('sky_??_??.ppm'))
+        
+        cw_list = []
+        
+        #Create individual pdfs for each CW
+        for i, (cw,ppm) in enumerate(zip(cw_fits,pos_ppms)):
             
-            setno = cw.set_no
-            dop_info = cw.dop_info
+            entry_line = cw_sets[i].lines[-3]
+            logger.debug(f'{entry_line = }')
+            date = " ".join(entry_line.split()[1:7])
+            cw_start = time_shape2astropy(date)
+            
+            start_jd   = cw_start.jd
+            start_date = cw_start.isot.split('T')[0]
+            
+            fig_title = f'{i+1} $\\bullet$ {start_date} $\\bullet {start_jd:.3f}$ '
+            
+            #Create fit plot
+            logger.info(f'Plotting {cw}')
+            fit_pdf = pub_path/f'CW_fit_{i+1}.pdf'
+            pp.pub_doppler(cw,fig_title,save=fit_pdf)
 
-            for frameno, frame in enumerate(cw.frames):
+            #Create pos pdf
+            pos_pdf = pub_path/f'CW_pos_{i+1}.pdf'
+            subprocess.run(["convert", ppm, pos_pdf], check=True)
 
-                fit = temp_path / f"fit_{setno:02d}_{frameno:02d}.dat"
-                ppm = temp_path / f"sky_{setno:02d}_{frameno:02d}.ppm"
-
-                if not fit.exists():
-                    raise FileNotFoundError(f"Missing {fit}")
-                if not ppm.exists():
-                    raise FileNotFoundError(f"Missing {ppm}")
-
-                fig_count += 1
-                date = frame.date
-                fig_title = fr"{fig_count:d} $\bullet$ {date.isot.split('T')[0]} $\bullet$ {date.jd:.3f}"
-
-                fit_pdf = pub_path / f"CW_fit_{setno:02d}_{frameno:02d}.pdf"
-                pos_pdf = pub_path / f"CW_pos_{setno:02d}_{frameno:02d}.pdf"
-
-                logger.info(f"Plotting {fit.name}")
-
-                pp.pub_doppler(fit, dop_info, fig_title, save=fit_pdf)
-                subprocess.run(["convert", ppm, pos_pdf], check=True)
-
-                cw_list.append({
-                    "setno": setno,
-                    "frameno": frameno,
-                    "cw_pdf": fit_pdf,
-                    "pos_pdf": pos_pdf,
-                })
+            cw_list.append({
+                "cw_pdf":  fit_pdf,
+                "pos_pdf": pos_pdf,
+            })
 
         if not outpdf:
             out_stem = f'PubCW_{identifier}'
