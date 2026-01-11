@@ -1,4 +1,4 @@
-#Last modified by @recannon 10/01/2026
+#Last modified by @recannon 11/01/2026
 
 from dataclasses import dataclass
 from typing import ClassVar, Literal
@@ -133,7 +133,7 @@ class modFile:
         for i,ol in enumerate(self.phot_functions[1]):
             ol_lines = ol.to_lines(idx=i)
             output_lines.extend(ol_lines)
-        output_lines.append('\n')
+        output_lines.append('\n\n')
         
         output_lines.extend(self.spinstate.to_lines())
 
@@ -155,6 +155,7 @@ class modFile:
 class FreezeAwareBase:
     values: "np.ndarray | list[float]"
     values_freeze: "np.ndarray | list[str]"         
+    _normal_freeze_names: ClassVar[list[str]] 
     _param_index: ClassVar[dict[str, int]] = {}  #overwrites when inherited
     _normal_freeze_names: ClassVar[list[str]] = ["values_freeze"]
 
@@ -176,6 +177,28 @@ class FreezeAwareBase:
                 continue
             out[name] = self.values[idx]
         return out
+    
+    def freeze_params(self, state, fields=None):
+        if state not in {'c', 'f', '='}:
+            raise ValueError(f'Invalid freeze state: {state}')
+
+        if fields is None:
+            fields = list(self._param_index.keys()) + [
+                name.replace('_freeze', '') for name in self._normal_freeze_names
+                if name != 'values_freeze']
+
+        for field in fields:
+            if field in self._param_index:
+                idx = self._param_index[field]
+                self.values_freeze[idx] = state
+            else:
+                freeze_attr = f'{field}_freeze'
+                attr = getattr(self, freeze_attr, None)
+                if isinstance(attr, (list, tuple)): #For lists like coeffs and vertices
+                    setattr(self, freeze_attr, [state]*len(attr))
+                else: #For single values like phi, lam, P etc
+                    setattr(self, freeze_attr, state)
+
 
     def __setattr__(self, name: str, value):
         if name in self._param_index:
@@ -238,10 +261,11 @@ class ModSpinState(FreezeAwareBase):
     def P(self, new_value):
         self.spin2 = (360 * 24) / new_value
         
-    #---Give custom properties freezing abilities---
+    #So that poles and P can be frozen with either name
     _derived_freeze_map: ClassVar[dict[str,str]] = {
         "lam_freeze": "angle0_freeze",
         "bet_freeze": "angle1_freeze",
+        "phi_freeze": "angle2_freeze",
         "P_freeze": "spin2_freeze",
     }
 
@@ -340,15 +364,6 @@ class ModEllipse(FreezeAwareBase):
         "rotoff0": 3, "rotoff1": 4, "rotoff2": 5,
         "two_a": 6, "ab": 7, "bc": 8,
     }
-    
-    def freeze_params(self, state, fields=None):
-        if fields==None:
-            fields=list(self._param_index.keys())
-
-        for field in fields:
-            logger.debug(f'Changing {field} to {state}')
-            idx = self._param_index[field]
-            self.values_freeze[idx] = state
     
     @classmethod
     def from_lines(cls, e_lines):
@@ -480,20 +495,6 @@ class ModVertex(FreezeAwareBase):
         index_map[perm] = np.arange(n)
         self.facets = index_map[self.facets]
         return
-
-    def freeze_params(self, state, fields=None):
-        if fields is None:
-            fields = list(self._param_index.keys()) + ['vertices']
-
-        for field in fields:
-            if field == 'vertices':
-                logger.debug(f'Changing vertices to {state}')
-                self.vertices_freeze = [state]*self.no_vert
-            else:
-                logger.debug(f'Changing {field} to {state}')
-                idx = self._param_index[field]
-                self.values_freeze[idx] = state
-    
 
     @classmethod
     def from_lines(cls, v_lines):

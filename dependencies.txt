@@ -3,9 +3,8 @@ Matplotlib
 Numpy
 Scipy
 Astropy
-Astroquery (not yet)
+Astroquery
 Trimesh
 jinja2
 rich
 cmasher
-healpy
