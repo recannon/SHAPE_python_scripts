@@ -6,3 +6,4 @@
 15. Documentation update
 16. Add delay-Doppler to write_pub (identical functionality to write_quick but with page breaks?)
 17. Deal with DD in write_quick (same as [16.]?)
+18. Update write_pub with new util functions, inline with write_quick
