@@ -7,181 +7,176 @@ import subprocess
 from pyshape.obs.obs_io import obsFile
 from pyshape.cli_config import logger, error_exit
 import pyshape.plotting.pub_routines as pp
-from pyshape.utils import time_shape2astropy, check_file
-from pyshape.jinja_env import template_env
+from pyshape.utils import check_file, check_dir, empty_dir, run_shape
+from pyshape.jinja_env import render_and_compile_pdf
 from pyshape.mod.mod_io import modFile
 from pyshape.plotting import artificial_lightcurves
+from dataclasses import dataclass
 
-def write_pub(modfile,obsfile,wparfile='par/wpar',outpdf=None):
-
+def write_pub(modfile,outdir,
+              model_args,cw_args,lc_args):
+    
+    #Setting up paths
     current_path = Path.cwd()
     waction_path = current_path / 'waction'
     temp_path    = waction_path / 'temp'
     pub_path     = waction_path / 'pub'
-    
-    #Identifier for shape logs
-    identifier = f'{modfile.stem}__{obsfile.stem}' if modfile.stem != obsfile.stem else modfile.stem
-    
-    #Changes filepaths to absolute paths. Needed as shape functions are run from ./waction, not ./
-    modfile,obsfile = Path(modfile).resolve(),Path(obsfile).resolve()
-    wparfile = Path(wparfile).resolve()
-
     #Makes sure waction/temp and waction/pub exist (and by extension waction)
     temp_path.mkdir(parents=True, exist_ok=True)
     pub_path.mkdir(parents=True, exist_ok=True)
+    modfile = Path(modfile).resolve()
 
-    #Empty waction and pub folders without trying to remove directories
-    subprocess.run('find waction/temp -maxdepth 1 -type f -exec rm {} +', shell=True, check=True)
-    subprocess.run('find waction/pub -maxdepth 1 -type f -exec rm {} +', shell=True)
+    #Identifier for output pdfs
+    if cw_args:
+        obsfile = Path(cw_args.obsfile).resolve()
+        wparfile = Path(cw_args.wparfile).resolve()
+        identifier = f'{modfile.stem}__{obsfile.stem}' if modfile.stem != obsfile.stem else modfile.stem
+    else:
+        identifier = f'{modfile.stem}'
 
-    #Run write with shape (doesn't require moments)
-    logger.info('Running write')
-    logger.debug(f"shape {wparfile} {modfile} {obsfile}")
-    with open(waction_path / f'{identifier}.wpar.log', 'w') as log:
-        try:
-            subprocess.run(["shape", str(wparfile), str(modfile), str(obsfile)], cwd=temp_path, stdout=log, check=True)
-        except subprocess.CalledProcessError:
-            error_exit(f'Problem running write action. Check {log.name}')
-
-    #Collage mpar figures
-    logger.info('Creating pdfs')
-    
-    #Read obsfile to check for which data types are present
-    obs_file = obsFile.from_file(obsfile)
-    obs_sets = obs_file.datasets
-    set_types = set(o.set_type for o in obs_sets) 
-    
-    if 'doppler' in set_types:
-            
+    #Only doppler call requires a write action
+    if cw_args:
+        
+        obs_file = obsFile.from_file(obsfile)
+        obs_sets = obs_file.datasets
         cw_sets = [o for o in obs_sets if o.set_type == 'doppler']
-        cw_list = []
-        fig_count = 0
-        
-        for cw in cw_sets:
+        if not cw_sets: #If there aren't any
+            logger.warning('Skipping CWs, none found in obsfile')
+        else:
+            #Empty waction and pub folders (not recursively)
+            empty_dir(temp_path)
+            empty_dir(pub_path)
+            #Run write action for data files
+            run_shape([wparfile, modfile, obsfile],
+                    run_dir=temp_path, out_log=waction_path / f'{identifier}.wpar.log')
             
-            setno = cw.set_no
-            dop_info = cw.dop_info
+            cw_list = []
+            for cw in cw_sets:
+                setno = cw.set_no
+                dop_info = cw.dop_info
 
-            for frameno, frame in enumerate(cw.frames):
+                for frameno, frame in enumerate(cw.frames):
+                    #Files (hopefully) created by write
+                    fit = temp_path / f"fit_{setno:02d}_{frameno:02d}.dat"
+                    ppm = temp_path / f"sky_{setno:02d}_{frameno:02d}.ppm"
+                    if not fit.exists():
+                        raise FileNotFoundError(f"Missing {fit}")
+                    if not ppm.exists():
+                        raise FileNotFoundError(f"Missing {ppm}")
 
-                fit = temp_path / f"fit_{setno:02d}_{frameno:02d}.dat"
-                ppm = temp_path / f"sky_{setno:02d}_{frameno:02d}.ppm"
+                    fig_title = fr"{len(cw_list)+1:d} $\bullet$ {frame.date.isot.split('T')[0]} $\bullet$ {frame.date.jd:.3f}"
 
-                if not fit.exists():
-                    raise FileNotFoundError(f"Missing {fit}")
-                if not ppm.exists():
-                    raise FileNotFoundError(f"Missing {ppm}")
+                    logger.info(f"Plotting {fit.name}")
+                    fit_pdf = pub_path / f"CW_fit_{setno:02d}_{frameno:02d}.pdf"
+                    pos_pdf = pub_path / f"CW_pos_{setno:02d}_{frameno:02d}.pdf"
+                    pp.pub_doppler(fit, dop_info, fig_title, save=fit_pdf)
+                    subprocess.run(["convert", ppm, pos_pdf], check=True)
 
-                fig_count += 1
-                date = frame.date
-                fig_title = fr"{fig_count:d} $\bullet$ {date.isot.split('T')[0]} $\bullet$ {date.jd:.3f}"
+                    cw_list.append({
+                        "setno": setno,
+                        "frameno": frameno,
+                        "cw_pdf": fit_pdf,
+                        "pos_pdf": pos_pdf,
+                    })
 
-                fit_pdf = pub_path / f"CW_fit_{setno:02d}_{frameno:02d}.pdf"
-                pos_pdf = pub_path / f"CW_pos_{setno:02d}_{frameno:02d}.pdf"
-
-                logger.info(f"Plotting {fit.name}")
-
-                pp.pub_doppler(fit, dop_info, fig_title, save=fit_pdf)
-                subprocess.run(["convert", ppm, pos_pdf], check=True)
-
-                cw_list.append({
-                    "setno": setno,
-                    "frameno": frameno,
-                    "cw_pdf": fit_pdf,
-                    "pos_pdf": pos_pdf,
-                })
-
-        if not outpdf:
             out_stem = f'PubCW_{identifier}'
-        elif outpdf:
-            out_stem = outpdf.replace('.pdf','')
-
-        template = template_env.get_template("pub_cw_plots.tex.j2")
-        tex_output = template.render(cw_list=cw_list)
-
-        tex_file = pub_path / f'{out_stem}.tex'
-        tex_file.write_text(tex_output)        
+            render_and_compile_pdf("pub_cw_plots.tex.j2", {"cw_list": cw_list},
+                                out_stem, pub_path, outdir)
         
-        subprocess.run(["pdflatex", tex_file.name],
-                cwd=pub_path, check=True,
-                stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) #Keeps errors
-
-        #Move final pdf
-        out_pdf = pub_path / f'{out_stem}.pdf'
-        destination = current_path / out_pdf.name
-        out_pdf.replace(destination)
-        logger.info(f'Moved final pdf to {out_pdf}')
+    #Both model and lc_toggle require reading of the modfile, do this together
+    if lc_args or model_args:
         
-    if 'lightcurve' in set_types:
-                
-        lc_filename  = Path(f"/cephfs/rcannon/2000rs11/lightcurves/2000rs11.lc.txt")
-                
-        #Read modfile for spin state, scattering laws, and shape
         mod_info = modFile.from_file(modfile)
         mod_vx = mod_info.components[0]
         V,F,FN,FNa = mod_vx.vertices, mod_vx.facets, mod_vx.FN, mod_vx.FNa
-        mod_ss = mod_info.spinstate
-        t0,P = mod_ss.t0.jd, mod_ss.P
-        lam,bet,phi = mod_ss.lam, mod_ss.bet, mod_ss.phi+90
+        
+        if lc_args:
+            #Assume there is only one optical scattering law
+            #Though test for if it exists (More likely to have 0 than 2+)
+            try:
+                mod_ol = mod_info.phot_functions[1][0]
+            except (KeyError, IndexError):
+                raise RuntimeError("No optical scattering law found in mod file")
+            scattering_law = mod_ol.type
+            scattering_params = mod_ol.values_to_dict()
+            mod_ss = mod_info.spinstate
+            t0,P = mod_ss.t0.jd, mod_ss.P
+            lam,bet,phi = mod_ss.lam, mod_ss.bet, mod_ss.phi+90
 
-        #Assume there is only one optical scattering law
-        #Though test for if it exists (More likely to have 0 than 2+)
-        try:
-            mod_ol = mod_info.phot_functions[1][0]
-        except (KeyError, IndexError):
-            raise RuntimeError("No optical scattering law found in mod file")
-        scattering_law = mod_ol.type
-        scattering_params = mod_ol.values_to_dict()
+            #Create plots and output results dictionary (not done)
+            artificial_lightcurves.pub_lightcurve_generator(pub_path, lc_args.lc_file,
+                                                            t0, lam, bet, phi, P,
+                                                            FN, FNa, V=V, F=F,
+                                                            scattering_law=scattering_law,
+                                                            scattering_params=scattering_params,
+                                                            shadowing=True,
+                                                            plot=True, show_plot=False)
 
-        #Create plots and output results dictionary (not done)
-        results = artificial_lightcurves.pub_lightcurve_generator(pub_path,lc_filename,
-                                                                  t0,lam,bet,phi,P,
-                                                                  FN,FNa,V=V,F=F,
-                                                                  scattering_law=scattering_law,
-                                                                  scattering_params=scattering_params,
-                                                                  shadowing=True,
-                                                                  plot=True,show_plot=False)
-
-        if not outpdf:
+            #Combine the figures
             out_stem = f'PubLC_{identifier}'
-        elif outpdf:
-            out_stem = outpdf.replace('.pdf','')
-
-        #Combine the figures
-        artificial_lightcurves.concat_lc_plots(pub_path,current_path,out_stem)
-        
-        
-        
-    # #Stack jpg files into a pdf
-    # jpg_files = sorted(temp_path.glob("*.jpg"))
-    # output_name = outdir / f"{identifier}.pdf"
-    # script_dir = Path(__file__).resolve().parent
-    # subprocess.run(["bash", script_dir / "bash_scripts/create_pdf.sh", output_name, *map(str, jpg_files)], check=True)
+            artificial_lightcurves.concat_lc_plots(pub_path,outdir,out_stem)        
     
-    # #Empty waction folder without trying to remove directories
-    # subprocess.run('find waction/temp -maxdepth 1 -type f -exec rm {} +', shell=True, check=True)
+        if model_args:
+        
+            with open(model_args.redfile) as f:
+                red_facets = {int(d) for d in f}
+            with open(model_args.yellowfile) as f:
+                yellow_facets = {int(d) for d in f}
+        
+            ticks=0.3
+            lims = 0.45
+            
+            out_stem = f'{outdir}/PubModel_{identifier}'
+            pp.pub_model(V,F,FN,
+                        red_list=red_facets,yellow_list=yellow_facets,
+                        lims=lims,ticks=ticks,out_stem=out_stem)
 
     return True
 
+#===Functions for parsing below this point===
+
+@dataclass
+class CWArgs:
+    obsfile: Path
+    wparfile: Path
+@dataclass  
+class LCArgs:
+    lc_file: Path
+@dataclass
+class ModelArgs:
+    redfile: Path
+    yellowfile: Path
+
+
 def parse_args():
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description="Calls shape moment/write action and saves results as PDFs.")
+    parser = argparse.ArgumentParser(description="Creates publication pdfs for each toggled plot type",
+                                     epilog='Saves pdfs as {outdir}/Pub{pubtype}_{identifier}.pdf')
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="Enable verbose output (sets log level to DEBUG)")
 
-    input_group = parser.add_argument_group('Compulsory input files')    
-    input_group.add_argument("modfile", type=str, nargs='?', help="modfile to write.")
-    input_group.add_argument("obsfile", type=str, nargs='?', help="obsfile to write.")
-    
-    data_group = parser.add_argument_group('Specify which data types to create pdfs for. Default: all')
-    data_group.add_argument("-lc", action="store_true", help="LC data")
-    data_group.add_argument("-cw", action="store_true", help="CW data")
-    
-    optional_group = parser.add_argument_group('Optional input parameters')
-    optional_group.add_argument("-w", "--wparfile", type=Path, default='./par/wpar',
-                        help="wpar file to use. Default cwd/par/wpar")
-    optional_group.add_argument("-o",'--outpdf', type=str, default=None,
-                        help="Name of pdf saved. Default Pub{dtype}_{identifier}.pdf")
+    io_group = parser.add_argument_group('IO inputs')    
+    io_group.add_argument("modfile", type=str, help="modfile (compulsory)")
+    io_group.add_argument("-o",'--outdir', type=str, default='./PubPlots',
+                          help="Directory of pdfs saved. Default ./PubPlots")
+
+    cw_group = parser.add_argument_group('CW plots (-cw)')
+    cw_group.add_argument("-cw", action="store_true", help="Plot CW data")
+    cw_group.add_argument("--obsfile", type=str, help="obsfile (compulsory)")
+    cw_group.add_argument("--wparfile", type=Path, default='./par/wpar',
+                          help="wpar file to use. Default cwd/par/wpar")
+
+    lc_group = parser.add_argument_group('Lightcurve plots (-lc)')
+    lc_group.add_argument("-lc", action="store_true", help="Plot lightcurve data")
+    lc_group.add_argument("--lcfile", type=Path, default=None,
+                          help="Lightcurve data file (compulsory)")
+
+    mp_group = parser.add_argument_group('Model projection plots (-mp)')
+    mp_group.add_argument("-mp", action="store_true", help="Plot model projections")
+    mp_group.add_argument("--redfile", type=Path, default=None,
+                          help="File listing facets to be coloured red")
+    mp_group.add_argument("--yellowfile", type=Path, default=None,
+                          help="File listing facets to be coloured yellow")
 
     return parser.parse_args()
 
@@ -192,15 +187,42 @@ def validate_args(args):
         logger.setLevel(logging.DEBUG)
         logger.debug('Verbose: Set level to DEBUG')
 
-    #Check optional inputs
-    if not args.wparfile.is_file():
-        error_exit(f'Cannot find given wparfile: {args.wparfile}')
-
-    if not args.modfile or not args.obsfile:
-        error_exit('Must provide both obsfile and modfile')
+    if not args.lc and not args.cw and not args.mp:
+        error_exit('Must specify which plots to be created')
     else:
         args.modfile = check_file(args.modfile)
+    
+    #CW checks
+    if args.cw:
+        if not args.obsfile:
+            error_exit('Must provide obsfile when using -cw')
         args.obsfile = check_file(args.obsfile)
+        args.wparfile = check_file(args.wparfile)
+        args.cw_args = CWArgs(obsfile=args.obsfile, wparfile=args.wparfile)
+    else:
+        args.cw_args = None
+
+    #LC checks
+    if args.lc:
+        if not args.lcfile:
+            error_exit('Must provide lcfile when using -lc')
+        args.lcfile = check_file(args.lcfile)
+        args.lc_args = LCArgs(lc_file=args.lcfile)
+    else:
+        args.lc_args = None
+
+    #Model checks
+    if args.mp:
+        if args.redfile:
+            args.redfile = check_file(args.redfile)
+        if args.yellowfile:
+            args.yellowfile = check_file(args.yellowfile)
+        args.model_args = ModelArgs(redfile=args.redfile, yellowfile=args.yellowfile)
+    else:
+        args.model_args = None
+    
+    #Create output directory if doesn't exist.
+    args.outdir = check_dir(args.outdir,create=True)
     
     return args
 
@@ -208,9 +230,9 @@ def main():
     args = parse_args()
     args = validate_args(args)    
     
-    logger.info(f"Processing: {args.modfile} and {args.obsfile}")
-    write_pub(args.modfile, args.obsfile,
-                args.wparfile, args.outpdf)
+    logger.info(f"Processing: {args.modfile}")
+    write_pub(args.modfile, args.outdir,
+              args.model_args,args.cw_args,args.lc_args)
 
 if __name__ == "__main__":
     main()

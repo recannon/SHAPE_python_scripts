@@ -2,9 +2,11 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
 from astropy.time import Time
-from ..cli_config import logger
 from astropy.stats import sigma_clip
+from ..cli_config import logger
+from .model.plot_model_projection import plot_model_projection
 
 # Colorblind-friendly colors
 CBblue  = np.array([68, 119, 170]) / 255
@@ -130,3 +132,63 @@ def pub_doppler(fit_file,dop_info,fig_title,sigma_threshold=5,show=True,save=Fal
     plt.close(fig)
 
     return 1
+
+
+def pub_model(vertices,facets,normals,
+              out_stem,
+              red_list=None,yellow_list=None,
+              lims = 0.6, ticks=0.5, titlesize=35, labelsize=30):
+    
+    views = ['+Z', '+Y', '+X', '-Z', '-Y', '-X']
+
+    plt.rcParams.update({'font.size': 30})
+    fig, axes = plt.subplots(2, 3, figsize=(30, 16))
+    
+    for ax, view in zip(axes.flatten(), views):
+        
+        #Create and plot model projection
+        ax = plot_model_projection(vertices,facets,normals,
+                                   ax,view,
+                                   red_list=red_list,yellow_list=yellow_list)
+    
+        #Then tick formatting!
+        ax.tick_params(direction='in')
+        ax.set_xlim(-lims,lims)
+        ax.set_ylim(-lims,lims)
+        ax.set_aspect('equal')
+        ax.spines[['right', 'top']].set_visible(False)
+        ax.set_title(rf'$\bf {view} $', fontsize=titlesize)
+        ax.xaxis.set_major_formatter(FormatStrFormatter('%g'))
+        ax.yaxis.set_major_formatter(FormatStrFormatter('%g'))
+        ax.set_xticks([-ticks, 0.0, ticks])
+        ax.set_yticks([-ticks, 0.0, ticks])
+        ax.grid(True, which='major', linewidth=0.8, alpha=0.6)
+        ax.spines['left'].set_linewidth(2.5)
+        ax.spines['bottom'].set_linewidth(2.5)
+        
+        match view:
+            case '+Y':
+                ax.set_xlabel('X [km]', fontsize=labelsize)
+                ax.set_ylabel('Z [km]', fontsize=labelsize)
+                ax.invert_xaxis()
+            case '-Y':
+                ax.set_xlabel('X [km]', fontsize=labelsize)
+                ax.set_ylabel('Z [km]', fontsize=labelsize)
+            case '+X':
+                ax.set_xlabel('Y [km]', fontsize=labelsize)
+                ax.set_ylabel('Z [km]', fontsize=labelsize)
+            case '-X':
+                ax.set_xlabel('Y [km]', fontsize=labelsize)
+                ax.set_ylabel('Z [km]', fontsize=labelsize)
+                ax.invert_xaxis()
+            case '+Z':
+                ax.set_xlabel('X [km]', fontsize=labelsize)
+                ax.set_ylabel('Y [km]', fontsize=labelsize)
+            case '-Z':
+                ax.set_xlabel('X [km]', fontsize=labelsize)
+                ax.set_ylabel('Y [km]', fontsize=labelsize)
+                ax.invert_yaxis()
+                
+    plt.tight_layout()
+    plt.savefig(f'{out_stem}.pdf', bbox_inches='tight', dpi=300)
+    plt.close()
