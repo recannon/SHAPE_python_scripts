@@ -5,8 +5,8 @@ from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 import argparse
 import logging
-from ..cli_config import logger, error_exit
-from ..utils import check_dir
+from ...cli_config import logger, error_exit
+from ...utils import check_dir
 
 def concat_lc_plots(figdir:Path, outdir:Path, pdf_name:str = 'Art_LC_Plots'):
 

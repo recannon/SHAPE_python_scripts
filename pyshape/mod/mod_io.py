@@ -495,6 +495,21 @@ class ModVertex(FreezeAwareBase):
         index_map[perm] = np.arange(n)
         self.facets = index_map[self.facets]
         return
+    
+    def reorder_vertices(self):
+
+        z_coords = self.base_disp[:, 2]
+        sort_idx = np.argsort(-z_coords)  #descending
+
+        self.base_disp = self.base_disp[sort_idx]
+        self.dev_dirs = self.dev_dirs[sort_idx]
+        self.deviations = self.deviations[sort_idx]
+
+        reverse_map = np.zeros(len(sort_idx), dtype=int)
+        reverse_map[sort_idx] = np.arange(len(sort_idx))
+
+        self.facets = reverse_map[self.facets]
+        return
 
     @classmethod
     def from_lines(cls, v_lines):

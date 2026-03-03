@@ -11,7 +11,7 @@ from ..cli_config import logger, error_exit
 #python -m convert_type test.mod -hmod 5 30 
 #For what the arguments after -hmod and -vmod mean, run mkvertmod or mkharmod in terminal with no arguments 
 
-def shuffle_vertices(fname):
+def shuffle_vertices(fname, reorder):
 
     logger.debug('Shuffling vertices')
     logger.debug(f'{fname}')
@@ -19,7 +19,10 @@ def shuffle_vertices(fname):
 
     for comp in mod_info.components:
         if comp.type == "vertex":
-            comp.shuffle_vertices()
+            if reorder == True:
+                comp.reorder_vertices()
+            else:
+                comp.shuffle_vertices()
     mod_info.write(fname)
 
     return True
@@ -31,10 +34,11 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Shuffle vertices of one or multiple files at once")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="Enable verbose output (sets log level to DEBUG)")
-
-    #Beta and lambda ranges and steps
     parser.add_argument("fname", type=str, 
                         help="Name of file to affect. If directory, will affect all .mod files in directory. Runs IN PLACE")
+    parser.add_argument("-r","--reorder", action="store_true",
+                        help="Re-orders according to SHAPE structure (north to south pole)")
+
     
     return parser.parse_args()
 
@@ -44,6 +48,9 @@ def validate_args(args):
     if args.verbose:
         logger.setLevel(logging.DEBUG)
         logger.debug('Verbose: Set level to DEBUG')
+
+    if args.reorder:
+        logger.info('Re-ordering from north to south')
 
     return args
 
@@ -55,12 +62,12 @@ def main():
 
     if Path(args.fname).is_file():
         logger.info(f'Running script on file {args.fname}')
-        shuffle_vertices(args.fname)
+        shuffle_vertices(args.fname, args.reorder)
     elif Path(args.fname).is_dir():
         logger.info(f'Running script on directory {args.fname}/*.mod')
         modfiles = glob.glob(f'{args.fname}/*.mod')
         for mod in modfiles:
-            shuffle_vertices(mod)
+            shuffle_vertices(mod, args.reorder)
     else:
         raise error_exit('Cannot find file or directory with name [fname]')
 

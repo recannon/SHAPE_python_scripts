@@ -10,7 +10,7 @@ import pyshape.plotting.pub_routines as pp
 from pyshape.utils import time_shape2astropy, check_file
 from pyshape.jinja_env import template_env
 from pyshape.mod.mod_io import modFile
-from pyshape import artificial_lightcurves
+from pyshape.plotting import artificial_lightcurves
 
 def write_pub(modfile,obsfile,wparfile='par/wpar',outpdf=None):
 
@@ -134,7 +134,13 @@ def write_pub(modfile,obsfile,wparfile='par/wpar',outpdf=None):
         scattering_params = mod_ol.values_to_dict()
 
         #Create plots and output results dictionary (not done)
-        results = artificial_lightcurves.pub_lightcurve_generator(pub_path,lc_filename,t0,lam,bet,phi,P,FN,FNa,V=V,F=F,shadowing=True,plot=True,show_plot=False)
+        results = artificial_lightcurves.pub_lightcurve_generator(pub_path,lc_filename,
+                                                                  t0,lam,bet,phi,P,
+                                                                  FN,FNa,V=V,F=F,
+                                                                  scattering_law=scattering_law,
+                                                                  scattering_params=scattering_params,
+                                                                  shadowing=True,
+                                                                  plot=True,show_plot=False)
 
         if not outpdf:
             out_stem = f'PubLC_{identifier}'

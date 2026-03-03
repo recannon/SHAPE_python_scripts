@@ -13,7 +13,7 @@ def check_type(par,par_name,req_type):
     except:
         error_exit(f"{par_name} must be of type {req_type.__name__} (got '{par}')")
 
-def check_dir(path: str | Path, must_exist=True, create=False):
+def check_dir(path, must_exist=True, create=False):
     """Convert to Path and check it's a directory (if required)."""
     path = Path(path)
     if path.exists():
@@ -27,7 +27,7 @@ def check_dir(path: str | Path, must_exist=True, create=False):
             error_exit(f"Directory does not exist: {path}")
     return path
 
-def check_file(path: str | Path, must_exist=True):
+def check_file(path, must_exist=True):
     """Convert to Path and check it is a file (if required)."""
     path = Path(path)
     if must_exist:
@@ -38,7 +38,7 @@ def check_file(path: str | Path, must_exist=True):
     return path
 
 #===Emptying directory===
-def empty_dir(path: str | Path, remove_dirs=False, ignore_errors=False):
+def empty_dir(path, remove_dirs=False, ignore_errors=False):
     """Remove all contents of a directory"""
     path = Path(path)
     if not path.exists():

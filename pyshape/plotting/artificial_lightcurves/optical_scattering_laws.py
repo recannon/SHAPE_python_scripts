@@ -77,7 +77,7 @@ def scattering(name, mu, mu0, solar_phase=None, params=None):
     try:
         return SCATTERING_LAWS[name](
             mu, mu0,
-            phase=solar_phase,
+            solar_phase=solar_phase,
             params=params or {}
         )
     except KeyError:

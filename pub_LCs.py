@@ -5,14 +5,13 @@
 
 from pyshape import artificial_lightcurves
 from pyshape.mod.mod_io import modFile
-from pyshape.io_utils import logger
-from pyshape import artificial_lightcurves
+from pyshape.cli_config import logger
 from pathlib import Path
 import logging
 
 logger.setLevel(logging.INFO)
 
-target = '2000rs11'
+target = '388188'
 iden = 'Brauer_SP'
 
 lc_filename  = Path(f"/cephfs/rcannon/{target}/lightcurves/{target}.lc.txt")
@@ -42,7 +41,11 @@ scattering_law = mod_ol.type
 scattering_params = mod_ol.values_to_dict()
 
 #Create plots and output results dictionary (not done)
-results = artificial_lightcurves.pub_lightcurve_generator(out_path,lc_filename,t0,lam,bet,phi,P,FN,FNa,V=V,F=F,shadowing=True,plot=True,show_plot=False)
+results = artificial_lightcurves.pub_lightcurve_generator(out_path,lc_filename,
+                                                          t0,lam,bet,phi,P,
+                                                          FN,FNa,V=V,F=F,
+                                                          shadowing=True,
+                                                          plot=True,show_plot=False)
 
 #Combine the figures
 artificial_lightcurves.concat_lc_plots(out_path,out_path.parent,f'{iden}_ArtLCs')

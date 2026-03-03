@@ -15,7 +15,7 @@ from ..utils import check_dir, check_type
 from . import scan_io
 
 def pub_gridscan(bet:np.array, lam:np.array, chi:np.array, 
-                cmp_array:list, cmp:str='magma', save:bool=False):
+                cmp_array:list, cmp:str='magma', save=None):
 
     lon_plot,lat_plot,chi_plot = _p_interpolate_chi_sphere(bet,lam,chi)
     coords_plot = tri.Triangulation(lon_plot, lat_plot)
@@ -56,13 +56,14 @@ def pub_gridscan(bet:np.array, lam:np.array, chi:np.array,
     
     #Colour bar
     cbar = fig.colorbar(cont, ax=ax3, orientation='horizontal', pad=0.1)
-    cbar.set_label("Objective function")
+    cbar.set_label(r"Reduced $\chi^2$")
     
     plt.tight_layout()
     
     if save:
         logger.debug(f'Saved pubplot to {save}')
-        plt.savefig(save)
+        plt.savefig(f'{save}.jpg')
+        plt.savefig(f'{save}.pdf')
     plt.show()
         
     return 1
@@ -162,7 +163,7 @@ def validate_args(args):
         error_exit(f'Directory {args.dirname} has no files in')
 
     if not args.fig_name:
-        args.fig_name = './grid_scan_pub.jpg'
+        args.fig_name = './grid_scan_pub'
 
     #Maxlevel
     if not args.max_level:
