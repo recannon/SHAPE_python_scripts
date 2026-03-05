@@ -1,4 +1,4 @@
-#Last modified by @recannon 11/01/2026
+#Last modified by @recannon 04/03/2026
 
 from astropy.time import Time
 from .cli_config import error_exit
@@ -8,13 +8,14 @@ import subprocess
 
 #===Helper functions for checking input arguments
 def check_type(par,par_name,req_type):
+    '''Check if an input is a correct type. If able, will change it to that type'''
     try:
         return req_type(par)
     except:
         error_exit(f"{par_name} must be of type {req_type.__name__} (got '{par}')")
 
 def check_dir(path, must_exist=True, create=False):
-    """Convert to Path and check it's a directory (if required)."""
+    '''Convert to Path and check it's a directory. Create if required'''
     path = Path(path)
     if path.exists():
         if not path.is_dir():
@@ -28,7 +29,7 @@ def check_dir(path, must_exist=True, create=False):
     return path
 
 def check_file(path, must_exist=True):
-    """Convert to Path and check it is a file (if required)."""
+    '''Convert to Path and check it is a file (if required).'''
     path = Path(path)
     if must_exist:
         if not path.exists():
@@ -39,7 +40,7 @@ def check_file(path, must_exist=True):
 
 #===Emptying directory===
 def empty_dir(path, remove_dirs=False, ignore_errors=False):
-    """Remove all contents of a directory"""
+    '''Remove all contents of a directory. remove_dirs=True to remove directories'''
     path = Path(path)
     if not path.exists():
         error_exit(f'Cannot empty {path}: Does not exist')
@@ -62,8 +63,8 @@ def empty_dir(path, remove_dirs=False, ignore_errors=False):
                 logger.warning(f'Cannot remove {item}: {e}')
 
 #===Running SHAPE===
-def run_shape(args, run_dir, out_log):
-    """Runs SHAPE with args=[par, mod, obs], where obs is optional"""
+def run_shape(args: list[str|Path], run_dir: str|Path, out_log: str|Path):
+    '''Runs SHAPE with args=[par, mod, obs], where obs is optional'''
     
     #Check files exist and change to absolute paths
     out_log = Path(out_log).resolve()
@@ -82,11 +83,13 @@ def run_shape(args, run_dir, out_log):
 
 #===Shape time formatting for mod/obs files
 def time_shape2astropy(t: str) -> Time:
+    '''Converts a SHAPE time string to astropy.time object'''
     parts = t.split()
     year, month, day, hour, minute, second = map(int, parts)
     iso_str = f"{year}-{month:02d}-{day:02d} {hour:02d}:{minute:02d}:{second:02d}"
     return Time(iso_str, format='iso', scale='utc')
 
 def time_astropy2shape(t: Time) -> str:
+    '''Converts astropy.time object to SHAPE time string'''
     dt = t.to_datetime()
     return f"{dt.year: >4} {dt.month: >2} {dt.day: >2} {dt.hour: >2} {dt.minute: >2} {dt.second: >2}"

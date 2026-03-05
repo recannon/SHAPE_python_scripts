@@ -1,9 +1,6 @@
 9. Update cli_config and logger to be in a function
-11. Merge concatenation for CW and LCs?
-13. LC Pub Plots in write_pub finding lightcurve file by itself (currently hard coded)
 14. Harmonic (and vertex?) template don't have meta info
 15. Documentation update
 16. Add delay-Doppler to write_pub (identical functionality to write_quick but with page breaks?)
 17. Deal with DD in write_quick (same as [16.]?)
-18. Update write_pub with new util functions, inline with write_quick
-19. 3-D model plot in python
+20.

@@ -1,4 +1,4 @@
-#Last modified by @recannon 09/01/2026
+#Last modified by @recannon 04/03/2026
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,6 +19,10 @@ FIG_HEIGHT = 7
 FIG_WIDHT  = 8.3
 
 def pub_lightcurves(art_lc_data,lc_data,solar_phase_angle,aspect_angle,i,out_path,show_plot=True):
+    '''
+    Produces a plot of an artificial lightcurve and the observed data for a single lightcurve
+    ./artificial_lightcurves/pub_lightcurve_generator.py for details on how input arrays are constructed
+    '''
     
     logger.info(f'Plotting lightcurve {i}')
 

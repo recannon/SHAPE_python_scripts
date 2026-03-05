@@ -6,14 +6,25 @@
 import numpy as np
 
 def lambert(mu, mu0, **kwargs):
+    '''
+    Reflected power proportional to mu * mu0.
+    Hapke (1993), Ch. 8.E.2, https://doi.org/10.1017/CBO9780511524998
+    '''
     return mu * mu0
 
 def lommel_seeliger(mu, mu0, **kwargs):
+    '''
+    Reflected power proportional to mu0/(mu + mu0).
+    Hapke (1993), Ch. 8.G.2, Eq. 8.35a https://doi.org/10.1017/CBO9780511524998
+    '''
     denom = mu + mu0
     denom[denom == 0] = np.nan
-    return np.nan_to_num(mu * mu0 / denom, nan=0.0)
+    return np.nan_to_num(mu0 / denom, nan=0.0)
 
 def hapke(mu, mu0, solar_phase, params):
+    '''
+    
+    '''
     
     omega  = params['omega']
     B0 = params.get('B0', 0.0)
@@ -40,9 +51,7 @@ def hapke(mu, mu0, solar_phase, params):
     )
     
 def kaasalainen(mu, mu0, solar_phase, params):
-    
-    #Gonna be real this is just from chat gpt for now
-    
+        
     R  = params['R']               # reflectance scale
     D  = params.get('D', 0.0)      # Lambert fraction
     k  = params.get('k', 0.0)      # phase slope

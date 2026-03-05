@@ -1,4 +1,4 @@
-# Last modified by @recannon 10/01/2026
+#Last modified by @recannon 04/03/2026
 
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
@@ -31,17 +31,23 @@ template_env.globals.update(
 #===Making pdf with tex===
 def render_and_compile_pdf(template_name: str, render_kwargs: dict,
                              out_stem: str, work_dir: Path, dest_dir: Path) -> Path:
-    """Render a Jinja template, compile with pdflatex, and move the result."""
+    
+    '''Render a Jinja template, compile with pdflatex, and move the result.'''
+    
+    #Compiles latex template
     template = template_env.get_template(template_name)
     tex_file = work_dir / f'{out_stem}.tex'
     tex_file.write_text(template.render(**render_kwargs))
-
+    
+    #Runs pdflatex in shell
     subprocess.run(["pdflatex", tex_file.name],
                    cwd=work_dir, check=True,
                    stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
 
+    #Moves created pdf to dest_dir
     out_pdf = work_dir / f'{out_stem}.pdf'
     destination = dest_dir / out_pdf.name
     out_pdf.replace(destination)
     logger.info(f'Moved final pdf to {destination}')  # also fixes the logging bug
+    
     return destination

@@ -1,7 +1,9 @@
-#Last modified 26/08/2025
+#Last modified by @recannon 04/03/2026
 
 def read(fname):
-    
+    '''
+    Reads the chisquared from a logfile and returns a dictionary of all data types
+    '''
     f = open(fname)
     lines = [l.strip().split() for l in f.readlines() if l[0]!='#']
     f.close()

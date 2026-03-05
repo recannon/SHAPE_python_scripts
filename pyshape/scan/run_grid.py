@@ -18,7 +18,7 @@ from . import scan_io
 #This code is very slow when doing at many angles
 
 def run_grid_scan(args):
-    
+        
     cwd = Path.cwd()
     
     if not args.angle2_range:
