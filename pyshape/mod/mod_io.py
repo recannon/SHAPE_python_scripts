@@ -1,6 +1,6 @@
-#Last modified by @recannon 11/01/2026
+#Last modified by @recannon 06/03/2026
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import ClassVar, Literal
 from astropy.time import Time
 from ..cli_config import logger,error_exit
@@ -78,7 +78,7 @@ class modFile:
             ol_lines = pf_lines[idx : idx + 7]
             optical_laws.append(ModOpticalLaw.from_lines(ol_lines))
 
-        return (radar_laws, optical_laws)
+        return ScatteringLawContainer(radar=radar_laws, optical=optical_laws)
 
     def _extract_components(self):
         logger.debug('Extracting components')
@@ -125,12 +125,12 @@ class modFile:
             output_lines.append('\n')
         
         output_lines.append(f'\n\n{{PHOTOMETRIC FUNCTIONS}}\n')
-        output_lines.append(f'{len(self.phot_functions[0]):>16} {{number of radar scattering laws}}\n')
-        for i,rl in enumerate(self.phot_functions[0]):
+        output_lines.append(f'{len(self.phot_functions.radar):>16} {{number of radar scattering laws}}\n')
+        for i,rl in enumerate(self.phot_functions.radar):
             rl_lines = rl.to_lines(idx=i)
             output_lines.extend(rl_lines)
-        output_lines.append(f'{len(self.phot_functions[1]):>16} {{number of optical scattering laws}}\n')
-        for i,ol in enumerate(self.phot_functions[1]):
+        output_lines.append(f'{len(self.phot_functions.optical):>16} {{number of optical scattering laws}}\n')
+        for i,ol in enumerate(self.phot_functions.optical):
             ol_lines = ol.to_lines(idx=i)
             output_lines.extend(ol_lines)
         output_lines.append('\n\n')
@@ -352,6 +352,12 @@ class ModRadarLaw(FreezeAwareBase):
         
         return new_rl_lines.splitlines(keepends=True)
     
+@dataclass
+class ScatteringLawContainer():
+    #If no laws, sets to empty list rather than None
+    radar:   list[ModRadarLaw] = field(default_factory=list) 
+    optical: list[ModOpticalLaw] = field(default_factory=list)
+
 
 #===VERTEX COMPONENTS===
 @dataclass
@@ -480,36 +486,23 @@ class ModVertex(FreezeAwareBase):
         cross = np.cross(a, b)
         return np.linalg.norm(cross, axis=1) * 0.5
 
-    def shuffle_vertices(self, rng: np.random.Generator | None = None):
+    def shuffle_vertices(self, rng=None):
         if rng is None:
             rng = np.random.default_rng()
+        perm = rng.permutation(len(self.base_disp))
+        self._apply_permutation(perm)
 
-        n = len(self.base_disp)
-        perm = rng.permutation(n)
-
-        self.base_disp = self.base_disp[perm]
-        self.dev_dirs = self.dev_dirs[perm]
-        self.deviations = self.deviations[perm]
-
-        index_map = np.zeros_like(perm)
-        index_map[perm] = np.arange(n)
-        self.facets = index_map[self.facets]
-        return
-    
     def reorder_vertices(self):
+        perm = np.argsort(-self.base_disp[:, 2])
+        self._apply_permutation(perm)
 
-        z_coords = self.base_disp[:, 2]
-        sort_idx = np.argsort(-z_coords)  #descending
-
-        self.base_disp = self.base_disp[sort_idx]
-        self.dev_dirs = self.dev_dirs[sort_idx]
-        self.deviations = self.deviations[sort_idx]
-
-        reverse_map = np.zeros(len(sort_idx), dtype=int)
-        reverse_map[sort_idx] = np.arange(len(sort_idx))
-
-        self.facets = reverse_map[self.facets]
-        return
+    def _apply_permutation(self, perm):
+        self.base_disp   = self.base_disp[perm]
+        self.dev_dirs    = self.dev_dirs[perm]
+        self.deviations  = self.deviations[perm]
+        index_map = np.zeros(len(perm), dtype=int)
+        index_map[perm] = np.arange(len(perm))
+        self.facets = index_map[self.facets]
 
     @classmethod
     def from_lines(cls, v_lines):

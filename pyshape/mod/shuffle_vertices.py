@@ -11,20 +11,20 @@ from ..cli_config import logger, error_exit
 #python -m convert_type test.mod -hmod 5 30 
 #For what the arguments after -hmod and -vmod mean, run mkvertmod or mkharmod in terminal with no arguments 
 
-def shuffle_vertices(fname, reorder):
-
+def shuffle_vertices(fname, reorder, rng=None):
+    
     logger.debug('Shuffling vertices')
     logger.debug(f'{fname}')
     mod_info = mod_io.modFile.from_file(fname)
-
+    
     for comp in mod_info.components:
         if comp.type == "vertex":
             if reorder == True:
                 comp.reorder_vertices()
             else:
-                comp.shuffle_vertices()
+                comp.shuffle_vertices(rng=rng)
+    
     mod_info.write(fname)
-
     return True
 
 
