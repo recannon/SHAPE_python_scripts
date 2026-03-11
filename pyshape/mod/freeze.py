@@ -16,7 +16,7 @@ SPIN_DEFAULTS = {
     'p': ('phi', 'P'),
 }
 
-def freeze_mod(fname, mod_type, freeze, selection=None):
+def freeze_mod(fname, mod_type, freeze, components=None):
     '''
     Takes modfile {fname} and freezes or unfreezes all variable factors for specified components. 
     If scale factor was set to = then remains unchanged.
@@ -29,7 +29,7 @@ def freeze_mod(fname, mod_type, freeze, selection=None):
                         - 's' 'spin' for spin state (Three pole angles, and period)
                         - 'p' for period and third pole angle only
         freeze     : c, f, or = . Whatever it will be set to
-        selection : Optional list of entries for ellipsoid/harmonic components numbers you want to affect. If none, affects all.
+        components : Optional list of entries for ellipsoid/harmonic components numbers you want to affect. If none, affects all.
     '''
 
     logger.debug(f'{fname} : Setting group {mod_type} to {freeze}')
@@ -50,7 +50,7 @@ def freeze_mod(fname, mod_type, freeze, selection=None):
         _freeze_components(
             mod_info=mod_info,
             freeze=freeze,
-            selection=selection,
+            components=components,
             comp_type=comp_type,
             )
     
@@ -63,22 +63,22 @@ def freeze_mod(fname, mod_type, freeze, selection=None):
     logger.debug('Done')
     return 1
 
-def _freeze_components(mod_info, freeze, selection, comp_type):
+def _freeze_components(mod_info, freeze, components, comp_type):
     
-    components = mod_info.components
-    no_components = len(components)
+    component_list = mod_info.components
+    no_components = len(component_list)
 
-    if selection is None:
-        selection = range(no_components)
-    elif max(selection) >= no_components:
-        error_exit(f'File does not have {max(selection) + 1} components')
+    if components is None:
+        components = range(no_components)
+    elif max(components) >= no_components:
+        error_exit(f'File does not have {max(components) + 1} components')
 
-    for idx in selection:
-        if components[idx].type != comp_type:
+    for idx in components:
+        if component_list[idx].type != comp_type:
             error_exit(f'Component {idx} is not of type {comp_type}')
 
-    for idx in selection:
-        components[idx].freeze_params(freeze)
+    for idx in components:
+        component_list[idx].freeze_params(freeze)
         
 
 #===Functions for parsing args below this point===
