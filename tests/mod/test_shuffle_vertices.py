@@ -52,14 +52,14 @@ def vertex_file(tmp_path):
 class TestApplyPermutation:
     """Tests for the shared _apply_permutation logic."""
 
-    def test_facets_describe_same_geometry_after_shuffle(self, vertex_file):
+    def test_facets_geometry_after_shuffle(self, vertex_file):
         """Facets should still describe the same faces after shuffle."""
         original = load(SAMPLE_VERTEX)
         mod = shuffle_and_reload(vertex_file, reorder=False, seed=42)
         assert get_face_coords(original.components[0]) == get_face_coords(mod.components[0]), \
             "Faces should describe the same geometry after shuffle"
 
-    def test_facets_describe_same_geometry_after_reorder(self, vertex_file):
+    def test_facets_geometry_after_reorder(self, vertex_file):
         """Facets should still describe the same faces after reorder."""
         original = load(SAMPLE_VERTEX)
         mod = shuffle_and_reload(vertex_file, reorder=True)
