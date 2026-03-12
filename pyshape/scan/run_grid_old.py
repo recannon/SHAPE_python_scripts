@@ -1,4 +1,4 @@
-#Last modified by @recannon 06/03/2026
+#Last modified 05/03/2026
 
 import argparse
 from dataclasses import fields
@@ -87,32 +87,17 @@ def setup_grid_scan(p1,p2,mod_template,obs_template,outf,angle2=0):
     mod_info = modFile.from_file(mod_template)
 
     components   = mod_info.components
-    scattering_laws = mod_info.phot_functions
+    radar_laws   = mod_info.phot_functions[0]
+    optical_laws = mod_info.phot_functions[1]
     spin_state   = mod_info.spinstate
-
-    owner_map = {
-        'spin': spin_state,
-        **{f'shape{i}': comp for i, comp in enumerate(components)},
-        **{f'rs{i}': law for i, law in enumerate(scattering_laws.radar)},
-        **{f'os{i}': law for i, law in enumerate(scattering_laws.optical)},
-    }
-
-    p1_owner = owner_map.get(p1.location)
-    p2_owner = owner_map.get(p2.location)
-
-    if p1_owner is None:
-        error_exit(f'Unknown target "{p1.location}"')
-    if p2_owner is None:
-        error_exit(f'Unknown target "{p2.location}"')
 
     param_names = [p1.name, p2.name]
 
     #Creates grid of values
-    polescan_location_check = p1.location == 'spin' and p2.location == 'spin'
-    if polescan_location_check and param_names == ['angle1', 'angle0']:
+    if param_names == ['angle1', 'angle0']:
         p1_vals,p2_vals = create_polescan_lists(p1.min,p1.max,p1.step,p2.min,p2.max,p2.step)
         polescan = True
-    elif polescan_location_check and param_names == ['angle0','angle1']:
+    elif param_names == ['angle0','angle1']:
         p2_vals,p1_vals = create_polescan_lists(p2.min,p2.max,p2.step,p1.min,p1.max,p1.step)
         polescan = True
     else:
@@ -122,34 +107,62 @@ def setup_grid_scan(p1,p2,mod_template,obs_template,outf,angle2=0):
         p1_vals = P1.flatten()
         p2_vals = P2.flatten()
         polescan = False
-    
-    with open(f'{outf}/namecores.txt', 'w') as namecores:
-        for p1_val, p2_val in zip(p1_vals, p2_vals):
 
-            p1_owner.set_param(p1.name, p1_val, freeze='c')
-            p2_owner.set_param(p2.name, p2_val, freeze='c')
+    #Find whether param is in spin state or shape
+    param_owner_indices = []
+    for param in param_names:
+        param_owner_index = None
+        variable_mods = [*components, spin_state]
+        for i, dclass in enumerate(variable_mods):
 
+            field_names = {f.name for f in fields(dclass)}
+            property_names = {k for k, v in vars(dclass.__class__).items() if isinstance(v, property)}
+            index_names = set(getattr(dclass, '_param_index', {}).keys())
+
+            all_names = field_names | property_names | index_names
+
+            if param in all_names:
+                logger.debug(f"{param} found in {dclass.__class__.__name__}")
+                param_owner_index = i
+                break
+
+        if param_owner_index is None:
+            error_exit(f'Could not match param {param} to a dataclass')
+
+        if param_owner_index == 0 and len(components) != 1:
+            error_exit('Expected a single component when scanning over shape parameter')
+
+        param_owner_indices.append(param_owner_index)
+
+    #Create files
+    with open(f'{outf}/namecores.txt','w') as namecores:
+        #Create new files
+        for p1_val,p2_val in zip(p1_vals,p2_vals):
+            
+            #Update values and freeze states
+            variable_mods[param_owner_indices[0]].set_param(param_names[0], p1_val, freeze='c')
+            variable_mods[param_owner_indices[1]].set_param(param_names[1], p2_val, freeze='c')
+            
+            #Adjust angle 2
             if polescan:
-                spin_state.set_param('angle2', angle2, freeze='f')
+                variable_mods[-1].set_param('angle2', angle2, freeze='f')
 
             new_ModFile = modFile(
-                components=components,
-                spinstate=spin_state,
-                phot_functions=scattering_laws
-            )
+                components=variable_mods[:-1],
+                spinstate=variable_mods[-1],
+                phot_functions=[radar_laws,optical_laws]
+                )
 
             #Write new file
             if polescan:
                 bet = 90 - p1_val
-                lam = (p2_val - 90) % 360
+                lam = (p2_val - 90)%360
                 namecore = f'lat{bet:+03d}lon{lam:03d}'
-                namecores.write(f'{namecore} {lam:+03d} {bet:03d}\n')  # lam/bet in wrong order as x axis val comes first
             else:
-                namecore = f'{p1.location}{p1.name}{p1_val:+.3f}{p2.location}{p2.name}{p2_val:+.3f}'
-                namecores.write(f'{namecore} {p1_val:+.3f} {p2_val:+.3f}\n')
-            
+                namecore = f'{p1.name}{p1_val:+.3f}{p2.name}{p2_val:+3f}'
             new_ModFile.write(f'{outf}/modfiles/{namecore}.mod')
             shutil.copy(obs_template, f'{outf}/obsfiles/{namecore}.obs')
+            namecores.write(f'{namecore}\n')
 
     no_files = len(p1_vals)
     return no_files
@@ -204,12 +217,11 @@ def parse_args():
                         help="Enable verbose output (sets log level to DEBUG)")
 
     #Two param names and grid info
-    param_group = parser.add_argument_group('''Parameters to scan (not required if using --polescan)
-Valid LOCs: rs* os* spin shape*''')
-    param_group.add_argument('-p1', '--param1', nargs=5, metavar=('LOC', 'NAME', 'MIN', 'MAX', 'STEP'),
-                            help="First parameter and scan range: e.g. shape0 scale2 0.9 1.1 0.02")
-    param_group.add_argument('-p2', '--param2', nargs=5, metavar=('LOC', 'NAME', 'MIN', 'MAX', 'STEP'),
-                            help="Second parameter and scan range: e.g. rs0 C 0.1 2.0 0.05")
+    param_group = parser.add_argument_group("Parameters to scan (not required if using --polescan)")
+    param_group.add_argument('-p1', '--param1', nargs=4, metavar=('NAME', 'MIN', 'MAX', 'STEP'),
+                            help="First parameter and scan range: e.g. scale2 0.9 1.1 0.02")
+    param_group.add_argument('-p2', '--param2', nargs=4, metavar=('NAME', 'MIN', 'MAX', 'STEP'),
+                            help="Second parameter and scan range: e.g. scale2 0.9 1.1 0.02")
 
     #Polescan, assume beta first
     polescan_group = parser.add_argument_group("Polescan usage with angle2 control (not used with --param1 and --param2)")
@@ -266,8 +278,8 @@ def validate_args(args):
             args.angle2 = 0
 
         #Check polescan vals and set to param1 and param2
-        bet_info = ['spin','angle1',*args.polescan[:3]]
-        lam_info = ['spin','angle0',*args.polescan[3:]]
+        bet_info = ['angle1',*args.polescan[:3]]
+        lam_info = ['angle0',*args.polescan[3:]]
         args.param1 = scan_io.check_scan_param_vals(bet_info, int)
         args.param2 = scan_io.check_scan_param_vals(lam_info, int)
 

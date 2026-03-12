@@ -8,7 +8,7 @@ from astropy.time import Time
 
 #These classes have less utility than the modFile class.
 #Weights can be changed with the relevant function but editing dataclass objects
-#will not be reflected when writing back out.
+#will not be reflected when writing back out. (unless its weights)
 
 
 class obsFile:

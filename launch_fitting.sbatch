@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=24on_500
-#SBATCH --time=48:00:00               # Time limit in the format hr:min:sec​
+#SBATCH --job-name=rs11_scat
+#SBATCH --time=0:05:00               # Time limit in the format hr:min:sec​
 #SBATCH --output=./faction/job_output_%j.log    # Output file (with job ID in the filename)​
 #SBATCH --error=./faction/job_error_%j.log      # Error file (with job ID in the filename)​
 #SBATCH --nodes=1
