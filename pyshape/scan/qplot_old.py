@@ -9,7 +9,7 @@ import numpy as np
 from scipy.interpolate import griddata
 from . import scan_io
 from ..cli_config import logger, error_exit
-from .. utils import check_dir, check_type
+from ..utils import check_dir, check_type
 
 def quick_gridscan(bet:np.array, lam:np.array, chi:np.array,
                 maxlevel:float=1.5, res:float=1, lines:list=[],

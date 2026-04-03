@@ -259,7 +259,7 @@ def validate_args(args):
             if args.angle2 is not None:
                 error_exit("Use only one of --angle2 or --angle2-range.")
             #Check vals
-            a2_info = ['angle2-range',*args.angle2_range]
+            a2_info = ['spin','angle2-range',*args.angle2_range]
             args.angle2_range = scan_io.check_scan_param_vals(a2_info,int)
         #Elif angle2 is not called
         elif args.angle2 is None:

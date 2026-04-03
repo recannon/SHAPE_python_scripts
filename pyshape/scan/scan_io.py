@@ -84,6 +84,7 @@ def check_scan_param_vals(param_info, req_type=float) -> ParamInfo:
             error_exit(f'{name} step must be greater than 0')
         return ParamInfo(location, name, min_val, max_val, step_val)
     except ValueError:
+        logger.warning(param_info)
         error_exit(f'Must provide {req_type.__name__} values for {param_info[1]} min/max/step')
 
 def check_no_files(no_files):
