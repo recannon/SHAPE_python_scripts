@@ -94,7 +94,7 @@ def write_pub(modfile,outdir,
             #Assume there is only one optical scattering law
             #Though test for if it exists (More likely to have 0 than 2+)
             try:
-                mod_ol = mod_info.phot_functions[1][0]
+                mod_ol = mod_info.phot_functions.optical[0]
             except (KeyError, IndexError):
                 raise RuntimeError("No optical scattering law found in mod file")
             scattering_law = mod_ol.type
@@ -118,13 +118,19 @@ def write_pub(modfile,outdir,
     
         if model_args:
         
-            with open(model_args.redfile) as f:
-                red_facets = {int(d) for d in f}
-            with open(model_args.yellowfile) as f:
-                yellow_facets = {int(d) for d in f}
-        
-            ticks=0.3
-            lims = 0.45
+            red_facets = set()
+            yellow_facets = set()
+
+            if model_args.redfile:
+                with open(model_args.redfile) as f:
+                    red_facets = {int(d) for d in f}
+
+            if model_args.yellowfile:
+                with open(model_args.yellowfile) as f:
+                    yellow_facets = {int(d) for d in f}
+                    
+            ticks= model_args.ticks
+            lims = model_args.lims
             
             out_stem = f'{outdir}/PubModel_{identifier}'
             pp.pub_model(V,F,FN,
@@ -146,6 +152,8 @@ class LCArgs:
 class ModelArgs:
     redfile: Path
     yellowfile: Path
+    ticks: float
+    lims: float
 
 
 def parse_args():
@@ -177,6 +185,10 @@ def parse_args():
                           help="File listing facets to be coloured red")
     mp_group.add_argument("--yellowfile", type=Path, default=None,
                           help="File listing facets to be coloured yellow")
+    mp_group.add_argument("--ticks", type=float, default=0.3,
+                          help="Symmetric location of axis ticks and grid lines")
+    mp_group.add_argument("--lims", type=float, default=0.45,
+                          help="Symmetric location of axis limits")
 
     return parser.parse_args()
 
@@ -217,7 +229,8 @@ def validate_args(args):
             args.redfile = check_file(args.redfile)
         if args.yellowfile:
             args.yellowfile = check_file(args.yellowfile)
-        args.model_args = ModelArgs(redfile=args.redfile, yellowfile=args.yellowfile)
+        args.model_args = ModelArgs(redfile=args.redfile, yellowfile=args.yellowfile,
+                                    ticks=args.ticks, lims=args.lims)
     else:
         args.model_args = None
     
