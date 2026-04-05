@@ -21,7 +21,7 @@ def combine_polescan(fit_dirs,out_dir):
 
     for i,scan_dir in enumerate(fit_dirs):
             
-        bet,lam,chi = scan_io.polescan_results(scan_dir)
+        lam,bet,chi,_ = scan_io.scan_results(scan_dir)
 
         chi_all = np.concatenate([chi_all, chi])
         bet_all = np.concatenate([bet_all, bet])
@@ -40,10 +40,12 @@ def combine_polescan(fit_dirs,out_dir):
     f = open(f'{out_dir}/namecores.txt', 'w')
     for coord in combined_best:
 
-        namecore = f'lat{coord.bet:+03.0f}lon{coord.lam:03.0f}'
+        bet = int(coord.bet)
+        lam = int(coord.lam)
+        namecore = f'lat{bet:+03.0f}lon{lam:03.0f}'
         orig_dir = fit_dirs[coord.loc]
 
-        f.write(namecore + '\n')
+        f.write(f'{namecore} {lam:+03d} {bet:03d}\n')
 
         for f_type in ['mod','obs','log']:
             f_orig = f'{orig_dir}/{f_type}files/{namecore}.{f_type}'
