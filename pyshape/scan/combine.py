@@ -1,60 +1,92 @@
-#Last modified 12/09/2025
+#Last modified 05/04/2026 by @recannon
 
 import argparse
 import logging
+import numpy as np
 from pathlib import Path
 import shutil
-import numpy as np
-from ..cli_config import logger,error_exit
+from rich.progress import Progress
+from ..cli_config import logger,error_exit,console
 from ..utils import check_dir
 from . import scan_io
 
+def combine_gridscan(fit_dirs, out_dir):
+    logger.debug(f'Combining gridscans from {fit_dirs}')
 
-def combine_polescan(fit_dirs,out_dir):
-    
-    logger.debug(f'Combining polescans from {fit_dirs}')
+    #Create output directories if doesn't exist
+    for f_type in ['mod', 'obs', 'log']:
+        Path(f'{out_dir}/{f_type}files').mkdir(exist_ok=True)
 
-    chi_all = np.empty((0,), dtype=float)
-    bet_all = np.empty((0,), dtype=float)
-    lam_all = np.empty((0,), dtype=float)
-    loc_all = np.empty((0,), dtype=int)
+    #Read all fits
+    p1_parts, p2_parts, chi_parts, loc_parts = [], [], [], []
+    with Progress(console=console, transient=True) as pb:
+        t1 = pb.add_task('Reading scan directories', total=len(fit_dirs))
+        for i, scan_dir in enumerate(fit_dirs):
+            p1, p2, chi, _ = scan_io.scan_results(scan_dir)
+            p1_parts.append(p1)
+            p2_parts.append(p2)
+            chi_parts.append(chi)
+            loc_parts.append(np.full_like(chi, i, dtype=int))
+            pb.update(task_id=t1, advance=1)
+    p1_all  = np.concatenate(p1_parts)
+    p2_all  = np.concatenate(p2_parts)
+    chi_all = np.concatenate(chi_parts)
+    loc_all = np.concatenate(loc_parts)
 
-    for i,scan_dir in enumerate(fit_dirs):
-            
-        lam,bet,chi,_ = scan_io.scan_results(scan_dir)
 
-        chi_all = np.concatenate([chi_all, chi])
-        bet_all = np.concatenate([bet_all, bet])
-        lam_all = np.concatenate([lam_all, lam])
-        loc_all = np.concatenate([loc_all, np.full_like(chi,i, dtype=int)])
+    #Combine and sort for each (p1, p2) and keep best chi
+    combined          = np.rec.fromarrays([p1_all, p2_all, chi_all, loc_all], names=('p1', 'p2', 'chi', 'loc'))
+    sorted_indices    = np.lexsort((combined.chi, combined.p2, combined.p1))
+    sorted_combined   = combined[sorted_indices]
+    coord_array       = np.stack((sorted_combined.p1, sorted_combined.p2), axis=1)
+    _, unique_indices = np.unique(coord_array, axis=0, return_index=True)
+    combined_best     = sorted_combined[unique_indices]
 
-    #Then combine and sort
-    combined         = np.rec.fromarrays([bet_all, lam_all, chi_all, loc_all], names=('bet', 'lam', 'chi', 'loc'))
-    sorted_indices   = np.lexsort((combined.chi, combined.lam, combined.bet))
-    sorted_combined  = combined[sorted_indices] #sorted array of coords, then by chisqr
-    coord_array      = np.stack((sorted_combined.bet, sorted_combined.lam), axis=1)
-    _,unique_indices = np.unique(coord_array, axis=0, return_index=True) #Index of each pairs first appearance
-    combined_best    = sorted_combined[unique_indices]
+    #Write namecores.txt and copy files to new dir
+    with Progress(console=console, transient=True) as pb:
+        t2 = pb.add_task('Copying files', total=len(combined_best))
 
-    #Write namecores
-    f = open(f'{out_dir}/namecores.txt', 'w')
-    for coord in combined_best:
+        with open(f'{out_dir}/namecores.txt', 'w') as namecore_file:
+            for coord in combined_best:
+                p1_val   = coord.p1
+                p2_val   = coord.p2
+                orig_dir = fit_dirs[coord.loc]
 
-        bet = int(coord.bet)
-        lam = int(coord.lam)
-        namecore = f'lat{bet:+03.0f}lon{lam:03.0f}'
-        orig_dir = fit_dirs[coord.loc]
+                #Read namecore from original namecores.txt (non polescans have more complex names, easier to copy)
+                #Skips this file if namecores not found in its supposed parent dir
+                orig_namecores = Path(orig_dir) / 'namecores.txt'
+                if not orig_namecores.exists():
+                    logger.warning(f'namecores.txt not found in {orig_dir}')
+                    pb.update(task_id=t2, advance=1)
+                    continue
 
-        f.write(f'{namecore} {lam:+03d} {bet:03d}\n')
+                #Find matching namecore line and parses file name
+                namecore = None
+                with open(orig_namecores) as f:
+                    for line in f:
+                        parts = line.strip().split()
+                        if float(parts[1]) == p1_val and float(parts[2]) == p2_val:
+                            namecore = parts[0]
+                            break
 
-        for f_type in ['mod','obs','log']:
-            f_orig = f'{orig_dir}/{f_type}files/{namecore}.{f_type}'
-            shutil.copy(f_orig, f'{out_dir}/{f_type}files/')
+                #Skips this file if couldn't find a match
+                if namecore is None:
+                    logger.warning(f'Could not find namecore for p1={p1_val}, p2={p2_val} in {orig_dir}')
+                    pb.update(task_id=t2, advance=1)
+                    continue
 
-    f.close()
+                #Finally copy file and write new namecore line
+                for f_type in ['mod', 'obs', 'log']:
+                    f_orig = Path(f'{orig_dir}/{f_type}files/{namecore}.{f_type}')
+                    if not f_orig.exists():
+                        logger.warning(f'File not found: {f_orig}')
+                        continue
+                    shutil.copy(f_orig, f'{out_dir}/{f_type}files/')
+                namecore_file.write(f'{namecore} {p1_val} {p2_val}\n')
 
-    return combined_best.bet,combined_best.lam,combined_best.chi, combined_best.loc
-    
+                pb.update(task_id=t2, advance=1)
+
+    return combined_best.p1, combined_best.p2, combined_best.chi, combined_best.loc
     
 #===Functions for parsing args below this point===
 def parse_args():
@@ -110,8 +142,10 @@ def main():
     args = parse_args()
     args = validate_args(args)
 
+    p1, p2, chi, loc = combine_gridscan(args.dirs, args.outdir)
+    logger.info(f'Combined {len(chi)} unique grid solutions into {args.outdir}')
 
-    combine_polescan(args.dirs,args.outdir)
+    return 
 
 
 if __name__ == "__main__":
