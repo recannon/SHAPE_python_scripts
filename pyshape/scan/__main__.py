@@ -12,7 +12,7 @@ Available commands:
     qplot       Quick plotting (grid scan)
     pplot       Publication-ready plotting (grid scan)
     combine     Combine scan results
-    rank.       Rank scan fits (and can delete those outside threshold)
+    rank        Rank scan fits (and can delete those outside threshold)
 
 Use "python -m pyshape.scan.<command> -h" for individual details.''')
     

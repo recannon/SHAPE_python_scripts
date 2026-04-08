@@ -8,7 +8,7 @@ def main():
 
 Available commands:
     convert_type       Apply mkharmod or mkvertmod
-    freeze_mod         Freeze or unfreeze sets of variables
+    freeze             Freeze or unfreeze sets of variables
     shuffle_vertices   Shuffle vertices order
 
 Use "python -m pyshape.scan.<command> -h" for individual details.''')

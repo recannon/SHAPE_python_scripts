@@ -1,4 +1,4 @@
-#Last modified 12/09/2025
+#Last modified 06/04/2026
 
 from ..cli_config import logger, error_exit, safe_exit
 from ..utils import check_type
@@ -26,47 +26,57 @@ def rank(dirname:Path, top:int = 5, chi_type:str = 'ALLDATA', percent:bool = Fal
             logger.warning(f"Error reading {log}: {e}")
     results.sort()
 
-    if not percent:
-        top_lines = [f"| {chi:.3f} : {log.name}" for chi, log in results[:top]]
-        logger.info(f"Top {top} files by chisqr ({chi_type}):\n" + "\n".join(top_lines))
-    elif percent:
-        chi_cut = results[0][0] * (1 + top/100)
-        top_lines = [f"| {chi:.3f} : {log.name}" for chi, log in results if chi < chi_cut]
-        logger.info(f"Files within {top}% of minimum ({chi_type}):\n" + "\n".join(top_lines))
+    if not results:
+        error_exit(f'No valid log files found in {dirname}')
 
+    if percent:
+        chi_cut = results[0][0] * (1 + top / 100)
+        selected = [(chi, log) for chi, log in results if chi < chi_cut]
+        top_lines = [f'| {chi:.6f} : {log.name}' for chi, log in selected]
+        logger.info(f'Files within {top}% of minimum ({chi_type}):\n' + '\n'.join(top_lines))
     else:
-        error_exit("This error shouldn't appear so it is time to cry")
-    
+        selected = results[:top]
+        top_lines = [f'| {chi:.6f} : {log.name}' for chi, log in selected]
+        logger.info(f'Top {top} files by chisqr ({chi_type}):\n' + '\n'.join(top_lines))
+
+    logger.info(f'Displaying {len(selected)} files')
+
     if delete:
-        
-        namecores_path = Path("./namecores.txt")
-        try:
-            with namecores_path.open("w") as f:
-                for line in top_lines:
-                    log = Path(line.split()[-1])
-                    f.write(log.stem + "\n")
-            logger.info(f"Rewrote {namecores_path} with {len(top_lines)} entries")
-        except Exception as e:
-            logger.warning(f"Could not rewrite {namecores_path}: {e}")
-        
-        #Deleting files
-        if not percent:
-            not_selected = results[top:]
-        elif percent:
-            not_selected = [(chi, log) for chi, log in results if chi >= chi_cut]
-        
-        for _,log in not_selected:
+        selected_stems = {log.stem for _, log in selected}
+
+        namecores_path = dirname.parent / 'namecores.txt'
+        if not namecores_path.exists():
+            error_exit(f'Could not find namecores.txt in {dirname.parent}')
+
+        #Delete not selected
+        not_selected = [(chi, log) for chi, log in results if log.stem not in selected_stems]
+
+        for _, log in not_selected:
+            parent = log.parent.parent  #Avoids using str replace
             shape_files = [
-                log, 
-                Path(str(log).replace("log", "obs")),
-                Path(str(log).replace("log", "mod")),
+                log,
+                parent / 'obsfiles' / f'{log.stem}.obs',
+                parent / 'modfiles' / f'{log.stem}.mod',
             ]
             for f in shape_files:
                 try:
                     f.unlink()
-                    logger.debug(f"Deleted {f}")
+                    logger.debug(f'Deleted {f}')
                 except Exception as e:
-                    logger.warning(f"Could not delete {f}: {e}")
+                    logger.warning(f'Could not delete {f}: {e}')
+
+        #Do namecores like this to keep p1 and p2 values
+        with open(namecores_path) as f:
+            namecore_lines = f.readlines()
+        kept_lines = []
+        for _, log in selected:
+            for line in namecore_lines:
+                if line.strip().split()[0] == log.stem:
+                    kept_lines.append(line)
+                    break
+        with open(namecores_path, 'w') as f:
+            f.writelines(kept_lines)
+        logger.info(f'Rewrote {namecores_path} with {len(kept_lines)} entries')
 
     return True
     
