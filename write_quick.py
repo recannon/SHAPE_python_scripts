@@ -8,6 +8,7 @@ from pyshape.obs.obs_io import obsFile
 from pyshape.cli_config import logger, error_exit
 from pyshape.utils import check_type, check_file, check_dir, empty_dir, run_shape
 from pyshape.plotting import quick_routines as qp
+import pyshape.log_file as log_file
 
 #python /path/to/write_fit.py modfile obsfile
 #python /path/to/write_fit.py lat lon (if pole scan, give values as strings, e.g +40 060. Files expected in mod/obsfiles) 
@@ -55,6 +56,10 @@ def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.'
               run_dir=temp_path, out_log=maction_log)
     run_shape([wparfile, modfile, obsfile],
               run_dir=temp_path, out_log=waction_log)
+
+    #Print chisqr. Can treat the wpar file as a log file for this purpose
+    chisqr = log_file.read(waction_log)['ALLDATA']
+    logger.info(f'Chisqr: {chisqr}')
 
     logger.info('Creating jpgs')
 
