@@ -1,4 +1,4 @@
-#Last modified by @recannon on 11/01/2026
+#Last modified by @recannon on 01/06/2026
 
 import argparse
 import logging
@@ -125,11 +125,17 @@ def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.'
         #Create plot
         qp.quick_doppler(cw_fits, show=False, save=temp_path / '4_cw_fits.jpg')
 
+    #Resize jpgs
+    resized = []
+    for jpg in sorted(temp_path.glob('*.jpg')):
+        out = temp_path / f'resized_{jpg.name}'
+        subprocess.run(['convert', str(jpg), '-resize', '842', str(out)], check=True)
+        resized.append(str(out))
     #Stack jpg files into a pdf
-    jpg_files = sorted(temp_path.glob("*.jpg"))
-    output_name = outdir / f"{identifier}.pdf"
-    script_dir = Path(__file__).resolve().parent
-    subprocess.run(["bash", script_dir / "bash_scripts/create_pdf.sh", output_name, *map(str, jpg_files)], check=True)
+    output_name = outdir / f'{identifier}.pdf'
+    subprocess.run(['convert', *map(str, resized), '-append', str(temp_path/'resized.jpg')], check=True)
+    subprocess.run(['convert', str(temp_path/'resized.jpg'), str(output_name)], check=True)
+    logger.info(f'Created PDF: {output_name}')
     
     return True
 
