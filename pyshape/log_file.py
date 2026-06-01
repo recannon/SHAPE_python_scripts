@@ -11,7 +11,6 @@ def read(fname):
     chisqrs = {}
     for l in lines:
         if l:
-            print(l)
             if not l[0].isnumeric() and l[0]!='WARNING:':
                 
                 try:
