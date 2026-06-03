@@ -1,4 +1,4 @@
-#Last modified by @recannon on 11/01/2026
+#Last modified by @recannon on 01/06/2026
 
 import argparse
 import logging
@@ -35,6 +35,7 @@ def write_pub(modfile,outdir,
         identifier = f'{modfile.stem}'
 
     #Only doppler call requires a write action
+    #This is becuase I can't be bothered to simulate the doppler spectrum myself
     if cw_args:
         
         obs_file = obsFile.from_file(obsfile)
@@ -57,30 +58,30 @@ def write_pub(modfile,outdir,
 
                 for frameno, frame in enumerate(cw.frames):
                     #Files (hopefully) created by write
-                    fit = temp_path / f"fit_{setno:02d}_{frameno:02d}.dat"
-                    ppm = temp_path / f"sky_{setno:02d}_{frameno:02d}.ppm"
+                    fit = temp_path / f'fit_{setno:02d}_{frameno:02d}.dat'
+                    ppm = temp_path / f'sky_{setno:02d}_{frameno:02d}.ppm'
                     if not fit.exists():
-                        raise FileNotFoundError(f"Missing {fit}")
+                        raise FileNotFoundError(f'Missing {fit}')
                     if not ppm.exists():
-                        raise FileNotFoundError(f"Missing {ppm}")
+                        raise FileNotFoundError(f'Missing {ppm}')
 
-                    fig_title = fr"{len(cw_list)+1:d} $\bullet$ {frame.date.isot.split('T')[0]} $\bullet$ {frame.date.jd:.3f}"
+                    fig_title = fr'{len(cw_list)+1:d} $\bullet$ {frame.date.isot.split("T")[0]} $\bullet$ {frame.date.jd:.3f}'
 
-                    logger.info(f"Plotting {fit.name}")
-                    fit_pdf = pub_path / f"CW_fit_{setno:02d}_{frameno:02d}.pdf"
-                    pos_pdf = pub_path / f"CW_pos_{setno:02d}_{frameno:02d}.pdf"
+                    logger.info(f'Plotting {fit.name}')
+                    fit_pdf = pub_path / f'CW_fit_{setno:02d}_{frameno:02d}.pdf'
+                    pos_pdf = pub_path / f'CW_pos_{setno:02d}_{frameno:02d}.pdf'
                     pp.pub_doppler(fit, dop_info, fig_title, save=fit_pdf)
-                    subprocess.run(["convert", ppm, pos_pdf], check=True)
+                    subprocess.run(['convert', ppm, pos_pdf], check=True)
 
                     cw_list.append({
-                        "setno": setno,
-                        "frameno": frameno,
-                        "cw_pdf": fit_pdf,
-                        "pos_pdf": pos_pdf,
+                        'setno': setno,
+                        'frameno': frameno,
+                        'cw_pdf': fit_pdf,
+                        'pos_pdf': pos_pdf,
                     })
 
             out_stem = f'PubCW_{identifier}'
-            render_and_compile_pdf("pub_cw_plots.tex.j2", {"cw_list": cw_list},
+            render_and_compile_pdf('pub_cw_plots.tex.j2', {'cw_list': cw_list},
                                 out_stem, pub_path, outdir)
         
     #Both model and lc_toggle require reading of the modfile, do this together
@@ -96,7 +97,7 @@ def write_pub(modfile,outdir,
             try:
                 mod_ol = mod_info.phot_functions.optical[0]
             except (KeyError, IndexError):
-                raise RuntimeError("No optical scattering law found in mod file")
+                raise RuntimeError('No optical scattering law found in mod file')
             scattering_law = mod_ol.type
             scattering_params = mod_ol.values_to_dict()
             mod_ss = mod_info.spinstate
