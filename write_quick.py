@@ -10,11 +10,7 @@ from pyshape.utils import check_type, check_file, check_dir, empty_dir, run_shap
 from pyshape.plotting import quick_routines as qp
 import pyshape.log_file as log_file
 
-#python /path/to/write_fit.py modfile obsfile
-#python /path/to/write_fit.py lat lon (if pole scan, give values as strings, e.g +40 060. Files expected in mod/obsfiles) 
-#python /path/to/write_fit.py --all (runs fit for all files in namecores, looking in modfiles/obsfiles) 
-
-def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.',no_cols=3,res=False):
+def write_quick(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.',no_cols=3,res=False):
     """
     Run shape model fitting and post-processing.
 
@@ -141,7 +137,8 @@ def write_fit(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.'
 
 def parse_args():
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description='Calls shape moment/write action and saves results as PDFs.')
+    parser = argparse.ArgumentParser(description='Calls shape moment/write action and saves results as PDFs.',
+                                     epilog='If writing polescan results with *files/lat{+02d}lon{03d}.* : Can use write_quick [lat] [lon]')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Enable verbose output (sets log level to DEBUG)')
 
@@ -213,13 +210,13 @@ def main():
     args = validate_args(args)    
     
     if args.all:
-        logger.info("Running in --all mode. Processing all files from namecores.txt")
+        logger.info('Running in --all mode. Processing all files from namecores.txt')
         with open('./namecores.txt') as f:
-            namecores = [line.strip() for line in f if line.strip()]
+            namecores = [line.strip().split()[0] for line in f if line.strip()]
 
         for namecore in namecores:
-            modfile = Path("modfiles") / f"{namecore}.mod"
-            obsfile = Path("obsfiles") / f"{namecore}.obs"
+            modfile = Path('modfiles') / f'{namecore}.mod'
+            obsfile = Path('obsfiles') / f'{namecore}.obs'
             
             if not modfile.is_file():
                 logger.warning(f'Cannot find {modfile}. Skipping')
@@ -227,22 +224,22 @@ def main():
             if not obsfile.is_file():
                 logger.warning(f'Cannot find {obsfile}. Skipping')
             
-            logger.info(f"Processing: {modfile} and {obsfile}")
-            write_fit(modfile, obsfile,
+            logger.info(f'Processing: {modfile} and {obsfile}')
+            write_quick(modfile, obsfile,
                       args.mparfile, args.wparfile, args.outdir,
                       args.no_cols, args.residuals)
 
     elif args.modfile and args.obsfile:
         
-        logger.info(f"Processing: {args.modfile} and {args.obsfile}")
-        write_fit(args.modfile, args.obsfile,
+        logger.info(f'Processing: {args.modfile} and {args.obsfile}')
+        write_quick(args.modfile, args.obsfile,
                   args.mparfile, args.wparfile, args.outdir,
                   args.no_cols, args.residuals)
 
     else:
         error_exit("This message shouldn't appear so it is time to cry")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
 
 
