@@ -1,4 +1,6 @@
-#Last modified 12/09/2025
+#Last modified 15/06/2026
+
+#15/06/2026 - Added functionality to change theta. This can help produce low res vertex models, where it doesn't work with higher thetas.
 
 import argparse
 import glob
@@ -8,22 +10,29 @@ import subprocess
 import numpy as np
 from . import shuffle_vertices
 from ..cli_config import logger, error_exit
+from .mod_io import modFile
 
 #python -m convert_type modfiles -vmod 500 n 
 #python -m convert_type test.mod -hmod 5 30 
 #For what the arguments after -hmod and -vmod mean, run mkvertmod or mkharmod in terminal with no arguments 
 
-def convert_type(fname,command_info,shuffle):
+def convert_type(fname,command_info,shuffle,theta):
 
     command, *command_args = command_info
     logger.debug(f'Applying {command} to {fname}')
 
+    #Changing theta
+    if theta:
+        mod_file = modFile.from_file(fname)
+        for c in mod_file.components:
+            c.theta = theta
+        mod_file.write(fname)
+
     #Running command
     subprocess.run([command, fname, fname, *map(str, command_args)], check=True)
 
-    # Shuffle vertices if required
+    #Shuffle vertices if required
     if command == 'mkvertmod' and shuffle:
-        
         shuffle_vertices.shuffle_vertices(fname)
 
     return True
@@ -51,6 +60,8 @@ def parse_args():
 
     parser.add_argument('-s','--shuffle-vertices', action='store_true',
                         help='Only considered if mkvertmod is chosen. Will randomise vertex order')
+    parser.add_argument('--theta',type=int,default=None,
+                        help='Changes theta value for all components prior to applying shape command')
 
     return parser.parse_args()
 
@@ -60,6 +71,9 @@ def validate_args(args):
     if args.verbose:
         logger.setLevel(logging.DEBUG)
         logger.debug('Verbose: Set level to DEBUG')
+
+    if args.theta:
+        logger.warning(f'Changing all components to have theta = {args.theta}')
 
     if args.vertex_model and args.harmonics_model:
         error_exit("I can't make a file a vertex and harmonics model at the same time!")
@@ -96,12 +110,12 @@ def main():
 
     if Path(args.fname).is_file():
         logger.info(f'Running script on file {args.fname}')
-        convert_type(args.fname,args.command,args.shuffle_vertices)
+        convert_type(args.fname,args.command,args.shuffle_vertices,args.theta)
     elif Path(args.fname).is_dir():
         logger.info(f'Running script on directory {args.fname}/*.mod')
         modfiles = glob.glob(f'{args.fname}/*.mod')
         for mod in modfiles:
-            convert_type(mod,args.command,args.shuffle_vertices)
+            convert_type(mod,args.command,args.shuffle_vertices,args.theta)
     else:
         raise error_exit('Cannot find file or directory with name [fname]')
 
