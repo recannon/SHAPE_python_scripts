@@ -1,6 +1,7 @@
-#Last modified 15/06/2026
+#Last modified 23/06/2026
 
 #15/06/2026 - Added functionality to change theta. This can help produce low res vertex models, where it doesn't work with higher thetas.
+#23/06/2026 - Added capability to do components separately
 
 import argparse
 import glob
@@ -11,31 +12,88 @@ import numpy as np
 from . import shuffle_vertices
 from ..cli_config import logger, error_exit
 from .mod_io import modFile
+import tempfile
 
 #python -m convert_type modfiles -vmod 500 n 
 #python -m convert_type test.mod -hmod 5 30 
 #For what the arguments after -hmod and -vmod mean, run mkvertmod or mkharmod in terminal with no arguments 
 
-def convert_type(fname,command_info,shuffle,theta):
+def convert_type(fname,command_info,shuffle,theta,components):
 
     command, *command_args = command_info
     logger.debug(f'Applying {command} to {fname}')
 
-    #Changing theta
-    if theta:
+    #Case for components listed
+    save_c = []
+    if components:
+        
         mod_file = modFile.from_file(fname)
-        for c in mod_file.components:
-            c.theta = theta
-        mod_file.write(fname)
+        comp_list = mod_file.components
+        
+        #Component check
+        if np.max(components) >= len(comp_list):
+            error_exit(f'{fname} does not have {np.max(components)} components')
+        
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            temp = Path(tmp_dir) / 'temp_modfile.mod'
+            
+            if components == [-1]:
+                components = np.arange(0,len(comp_list))
+            
+            #Loop components
+            for idx in components:
+                c = comp_list[idx]
+                if theta:
+                    c.theta = theta
+            
+                #Save CoM for reinsertion after command applied
+                c_com = np.array([
+                    c.linoff0, c.linoff1, c.linoff2
+                ])
+                
+                for i in range(3):
+                    setattr(c, f'linoff{i}', 0)
+                
+                mod_file.components = [c]
+                mod_file.write(temp)
+                
+                #Running command
+                subprocess.run([command, str(temp), str(temp), *map(str, command_args)], check=True)
+                
+                #Shuffle vertices if required
+                if command == 'mkvertmod' and shuffle:
+                    shuffle_vertices.shuffle_vertices(temp)
 
-    #Running command
-    subprocess.run([command, fname, fname, *map(str, command_args)], check=True)
+                mod_file_new = modFile.from_file(temp)
+                c_new = mod_file_new.components[0]
+                for i in range(0,3):
+                    setattr(c_new, f'linoff{i}', c_com[i])
+                save_c.append(mod_file_new.components[0])
+            
+        mod_file.components = save_c
+        mod_file.write(fname)       
+        
+        return True
+        
+    
+    #Case for no components listed (just apply command normally)
+    else:
+    
+        #Changing theta
+        if theta:
+            mod_file = modFile.from_file(fname)
+            for c in mod_file.components:
+                c.theta = theta
+            mod_file.write(fname)
 
-    #Shuffle vertices if required
-    if command == 'mkvertmod' and shuffle:
-        shuffle_vertices.shuffle_vertices(fname)
+        #Running command
+        subprocess.run([command, fname, fname, *map(str, command_args)], check=True)
 
-    return True
+        #Shuffle vertices if required
+        if command == 'mkvertmod' and shuffle:
+            shuffle_vertices.shuffle_vertices(fname)
+
+        return True
 
 
 #===Functions for parsing args below this point===
@@ -62,6 +120,8 @@ def parse_args():
                         help='Only considered if mkvertmod is chosen. Will randomise vertex order')
     parser.add_argument('--theta',type=int,default=None,
                         help='Changes theta value for all components prior to applying shape command')
+    parser.add_argument('-c','--components', nargs='+', type=int, default=None,
+                        help="Optional list of components to affect (-1 affects all individually)")
 
     return parser.parse_args()
 
@@ -110,12 +170,12 @@ def main():
 
     if Path(args.fname).is_file():
         logger.info(f'Running script on file {args.fname}')
-        convert_type(args.fname,args.command,args.shuffle_vertices,args.theta)
+        convert_type(args.fname,args.command,args.shuffle_vertices,args.theta,args.components)
     elif Path(args.fname).is_dir():
         logger.info(f'Running script on directory {args.fname}/*.mod')
         modfiles = glob.glob(f'{args.fname}/*.mod')
         for mod in modfiles:
-            convert_type(mod,args.command,args.shuffle_vertices,args.theta)
+            convert_type(mod,args.command,args.shuffle_vertices,args.theta,args.components)
     else:
         raise error_exit('Cannot find file or directory with name [fname]')
 
