@@ -1,4 +1,8 @@
-#Last modified by @recannon 04/03/2026
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#Helper functions for use throughout the scripts
 
 from astropy.time import Time
 from .cli_config import error_exit

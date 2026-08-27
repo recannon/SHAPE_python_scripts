@@ -1,4 +1,10 @@
-#last modified by @recannon 06/03/2026
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#Creates quick grid scan plot (no line scan capability)
+#Works on all grid scans
+#Requires specific naming schemes as created by run_grid
 
 import argparse
 import logging

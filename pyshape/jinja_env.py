@@ -1,4 +1,8 @@
-#Last modified by @recannon 04/03/2026
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#Sets up the templates for use throughout package
 
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader

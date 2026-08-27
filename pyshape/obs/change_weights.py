@@ -1,14 +1,17 @@
-#Last modified by @recannon 10/01/2026
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#Used to change the weights of obsfiles. Can be done by component, and in directories.
+#python -m change_weights obsfiles cw 1e4 -c 5 6 7 #Sets cw weights for files in obsfiles, only affecting sets 5, 6 and 7
+#python -m change_weights obsfiles dd 0.5 #Sets delay-Doppler weights for files in obsfiles
+#python -m change_weights test.obs lc 100 #Sets lightcurve weights in test.obs
 
 from .obs_io import obsFile
 import argparse
 from pathlib import Path
 import glob
 from ..cli_config import logger
-
-#python -m change_weights obsfiles cw 1e4 5 6 7
-#python -m change_weights obsfiles dd 0.5
-#python -m change_weights test.obs lc 100
 
 def change_weights(fname,obs_type,new_weights,sets_affected=None):
 

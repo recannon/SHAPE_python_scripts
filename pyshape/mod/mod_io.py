@@ -1,12 +1,17 @@
-#Last modified by @recannon 06/03/2026
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More documentation
+
+#Reads in a modfile, stores it in a class, which contains a series of dataclasses with rigid structure to store all parameters and spin states.
+#Can then write back out using a jinja2 template.
+#This file contains the structure for said dataclasses, and functions for which to read, write, and edit
 
 from dataclasses import dataclass, field
 from typing import ClassVar, Literal
 from astropy.time import Time
-from ..cli_config import logger,error_exit
-from ..utils import time_shape2astropy,time_astropy2shape
+from ..cli_config import logger
+from ..utils import time_shape2astropy
 import numpy as np
-from pathlib import Path
 from ..jinja_env import template_env
 
 class modFile:

@@ -3,5 +3,13 @@
 15. Documentation update
 16. Add delay-Doppler to write_pub (identical functionality to write_quick but with page breaks?)
 17. Deal with DD in write_quick (same as [16.]?)
-20. Unit tests
+20. More tests
 21. Redo scan.combine to be more generic and cleaner
+22. Update mod.freeze to full parameter access
+23. Update mod.freeze to be more customisable (beyond just spin states)
+24. Update mod.plot to be tidied up and more usable without file customisation
+25. mod.shuffle_vertices requires component choosing.
+26. Update obs.speckle_mask to be tidier and more versatile
+27. obs_io complete restructure
+28. Better documentation for non-callable files (plotting)
+29. update line_scans and compatability with other things (like combine) and plotting

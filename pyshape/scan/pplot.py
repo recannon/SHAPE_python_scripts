@@ -1,4 +1,9 @@
-#Last modified 14/09/2025
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#Creates publication level POLE scan plot (no line scan capability)
+#Does not work on something which isn't a pole scan
 
 import argparse
 import logging

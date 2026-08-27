@@ -1,4 +1,8 @@
-#Last modified by @recannon 01/06/2026
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#Reads a logfile chisqrs
 
 def read(fname):
     '''

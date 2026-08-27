@@ -1,4 +1,10 @@
-#Last modified by @recannon 10/01/2026
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#Sets up logger for outputs used in all scripts
+#Can be customised below
+#Also has some exit functions for tidy use when checking inputs
 
 import logging
 import sys

@@ -1,7 +1,16 @@
-#Last modified 23/06/2026
+#Last modified by @recannon 27/08/2026
 
 #15/06/2026 - Added functionality to change theta. This can help produce low res vertex models, where it doesn't work with higher thetas.
 #23/06/2026 - Added capability to do components separately
+#27/08/2026 - More Documentation
+
+#Applies mkvertmod and mkharmod to a file, or directory of files.
+#It can apply this to create a single component model, or apply the command to individual components in a modfile.
+#For what the arguments after -hmod and -vmod mean, run mkvertmod or mkharmod in terminal with no arguments (These are native SHAPE commands)
+#python -m convert_type test.mod -hmod 5 30   #Creates harmod file for test.mod
+#python -m convert_type modfiles -vmod 500 n -s #Creates vertex file for all files in directory modfiles, and shuffles vertex order
+#python -m convert_Type test.mod -vmod 1000 n -c -1  #Creates a multicomponent vertex file
+#python -m convert_Type test.mod -vmod 1000 n -c 2   #Turns only the 3rd component in a file to a vertex component, leaving others untouched.
 
 import argparse
 import glob
@@ -13,10 +22,6 @@ from . import shuffle_vertices
 from ..cli_config import logger, error_exit
 from .mod_io import modFile
 import tempfile
-
-#python -m convert_type modfiles -vmod 500 n 
-#python -m convert_type test.mod -hmod 5 30 
-#For what the arguments after -hmod and -vmod mean, run mkvertmod or mkharmod in terminal with no arguments 
 
 def convert_type(fname,command_info,shuffle,theta,components):
 
@@ -69,13 +74,12 @@ def convert_type(fname,command_info,shuffle,theta,components):
                 for i in range(0,3):
                     setattr(c_new, f'linoff{i}', c_com[i])
                 save_c.append(mod_file_new.components[0])
-            
+        
         mod_file.components = save_c
         mod_file.write(fname)       
         
         return True
         
-    
     #Case for no components listed (just apply command normally)
     else:
     

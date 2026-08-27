@@ -1,4 +1,5 @@
-#Last modified by @recannon on 01/06/2026
+#Last modified by @recannon on 15/08/26 include .obj reading
+#Modified by @recannon on 01/06/2026
 
 import argparse
 import logging
@@ -12,6 +13,7 @@ from pyshape.jinja_env import render_and_compile_pdf
 from pyshape.mod.mod_io import modFile
 from pyshape.plotting import artificial_lightcurves
 from dataclasses import dataclass
+import trimesh
 
 def write_pub(modfile,outdir,
               model_args,cw_args,lc_args):
@@ -87,10 +89,16 @@ def write_pub(modfile,outdir,
     #Both model and lc_toggle require reading of the modfile, do this together
     if lc_args or model_args:
         
-        mod_info = modFile.from_file(modfile)
-        mod_vx = mod_info.components[0]
-        V,F,FN,FNa = mod_vx.vertices, mod_vx.facets, mod_vx.FN, mod_vx.FNa
-        
+        if str(modfile).endswith('.mod'):
+            mod_info = modFile.from_file(modfile)
+            mod_vx = mod_info.components[0]
+            V,F,FN,FNa = mod_vx.vertices, mod_vx.facets, mod_vx.FN, mod_vx.FNa
+        if str(modfile).endswith('.obj'):
+            mesh = trimesh.load(modfile)
+            V  = mesh.vertices
+            F  = mesh.faces
+            FN = mesh.face_normals
+                    
         if lc_args:
             #Assume there is only one optical scattering law
             #Though test for if it exists (More likely to have 0 than 2+)
@@ -165,12 +173,12 @@ def parse_args():
                         help="Enable verbose output (sets log level to DEBUG)")
 
     io_group = parser.add_argument_group('IO inputs')    
-    io_group.add_argument("modfile", type=str, help="modfile (compulsory)")
+    io_group.add_argument("modfile", type=str, help="model file (compulsory) [.mod; .obs]")
     io_group.add_argument("-o",'--outdir', type=str, default='./PubPlots',
                           help="Directory of pdfs saved. Default ./PubPlots")
 
     cw_group = parser.add_argument_group('CW plots (-cw)')
-    cw_group.add_argument("-cw", action="store_true", help="Plot CW data")
+    cw_group.add_argument("-cw", action="store_true", help="Plot CW data. modfile must be in SHAPE format.")
     cw_group.add_argument("--obsfile", type=str, help="obsfile (compulsory)")
     cw_group.add_argument("--wparfile", type=Path, default='./par/wpar',
                           help="wpar file to use. Default cwd/par/wpar")
@@ -204,11 +212,14 @@ def validate_args(args):
         error_exit('Must specify which plots to be created')
     else:
         args.modfile = check_file(args.modfile)
-    
+
+        
     #CW checks
     if args.cw:
         if not args.obsfile:
             error_exit('Must provide obsfile when using -cw')
+        if str(args.modfile).endswith('.obj'):
+            error_exit('Must use a SHAPE .mod file for cw files')
         args.obsfile = check_file(args.obsfile)
         args.wparfile = check_file(args.wparfile)
         args.cw_args = CWArgs(obsfile=args.obsfile, wparfile=args.wparfile)

@@ -1,4 +1,9 @@
-#Last modified by @recannon 20/12/2025
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#File with functions for reading convex inversion input and output files.
+#Mainly for plotting lightcurves with pub_plot
 
 from .cli_config import logger
 import numpy as np

@@ -6,7 +6,7 @@ from pyshape.mod.mod_io import modFile
 from pathlib import Path
 
 #Read modfile for shape (Assumes one vertex component only)
-mod_filename = Path('/home/rcannon/Code/Radar/SHAPE/2000rs11/PS2/FF/modfiles/FF.mod')
+mod_filename = Path('/home/rcannon/Code/Radar/SHAPE/2024on/PS6/2-vx/v1500-02/modfiles/lat-86lon312.mod')
 mod_info = modFile.from_file(mod_filename)
 mod_vx = mod_info.components[0]
 V,F,FN,FNa = mod_vx.vertices, mod_vx.facets, mod_vx.FN, mod_vx.FNa

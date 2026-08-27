@@ -1,15 +1,18 @@
-#Last modified by @recannon 10/01/2026
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+#14/07/2026 - Delay-Doppler set reads data dir
+
+#Stores obsfile information in a series of classes (and some data classes)
+#These classes have less utility than the modFile class.
+#Weights can be changed with the relevant function but editing dataclass objects
+#will not be reflected when writing back out. (unless its weights)
 
 from dataclasses import dataclass
 from typing import Union, Type
 from ..utils import time_shape2astropy, time_astropy2shape
 from ..cli_config import logger, error_exit
 from astropy.time import Time
-
-#These classes have less utility than the modFile class.
-#Weights can be changed with the relevant function but editing dataclass objects
-#will not be reflected when writing back out. (unless its weights)
-
 
 class obsFile:
     
@@ -233,8 +236,9 @@ class ObsDelayDoppler(ObsSet):
     del_info: list[Union[float,str]] = None
     dop_info: list[float] = None
     no_frames: int = None
-    frames: list[ObsDopplerFrame] = None
-        
+    frames: list[ObsDelayDopplerFrame] = None
+    data_dir: str = None
+    
     def __post_init__(self):
         self._parse()
         
@@ -244,6 +248,9 @@ class ObsDelayDoppler(ObsSet):
         self.del_info = [float(parts[0]),float(parts[1]),float(parts[2]),float(parts[3]),parts[4]]      
         dop_idx = self._find_line('{dop: ',self.set_lines)    
         self.dop_info = [float(x) for x in self.set_lines[dop_idx].split()[:5]]
+        
+        data_dir_idx = self._find_line('{data directory}', self.set_lines)
+        self.data_dir = self.set_lines[data_dir_idx].split()[0] 
         
         frame_idx = self._find_line('{number of frames}', self.set_lines)
         self.no_frames = int(self.set_lines[frame_idx].split()[0])

@@ -1,4 +1,17 @@
-#Last modified 11/01/2026
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#Used to change the freeze state of sets of parameters in a modfile, or directory of modfiles
+#python -m freeze_mod modfiles v f      #Sets all vertex parameters to free (f) in all .mod files in modfiles
+#python -m freeze_mod test.mod s =      #Sets all spin state parameters to equal (=) in test.mod
+#python -m freeze_mod test.mod e c -c 0  #Sets all ellipsoid parameters to constant (c) in test.mod in component 0 only
+
+#Customisable, but cannot use e, v, or h (these are for shape)
+SPIN_DEFAULTS = {
+    's': ('lam', 'bet', 'phi', 'P'),
+    'p': ('phi', 'P'),
+}
 
 import argparse
 import glob
@@ -6,15 +19,6 @@ import logging
 from pathlib import Path
 from ..cli_config import logger, error_exit
 from .mod_io import modFile
-
-#python -m freeze_mod modfiles v 1
-#python -m freeze_mod test.mod e 0 1
-
-#Customisable, but cannot use e, v, or h
-SPIN_DEFAULTS = {
-    's': ('lam', 'bet', 'phi', 'P'),
-    'p': ('phi', 'P'),
-}
 
 def freeze_mod(fname, mod_type, freeze, components=None):
     '''
@@ -83,18 +87,18 @@ def _freeze_components(mod_info, freeze, components, comp_type):
 
 #===Functions for parsing args below this point===
 def parse_args():
-    """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description="Freeze or unfreeze all variable factors of listed components in a modfile.")
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="Enable verbose output (sets log level to DEBUG)")
+    '''Parse command-line arguments.'''
+    parser = argparse.ArgumentParser(description='Freeze or unfreeze all variable factors of listed components in a modfile.')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Enable verbose output (sets log level to DEBUG)')
 
     #Beta and lambda ranges and steps
-    parser.add_argument("fname",    type=str, help="Name of file to affect. If directory, will affect all .mod files in directory")
-    parser.add_argument("mod_type", type=str, help="Type of component expected")
-    parser.add_argument("freeze",   type=str, help="[ f, c, = ] . Change variables to this str")
+    parser.add_argument('fname',    type=str, help='Name of file to affect. If directory, will affect all .mod files in directory')
+    parser.add_argument('mod_type', type=str, help='Type of component expected')
+    parser.add_argument('freeze',   type=str, help='[ f, c, = ] . Change variables to this str')
 
-    parser.add_argument("-c", "--components", nargs='+', type=int, default=None,
-                        help="Optional list of components to affect (ellipse only)")
+    parser.add_argument('-c', '--components', nargs='+', type=int, default=None,
+                        help='Optional list of components to affect')
 
     return parser.parse_args()
 
@@ -131,6 +135,6 @@ def main():
         raise error_exit('Cannot find file or directory with name [fname]')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
 

@@ -1,4 +1,13 @@
-#Last modified by @recannon 06/03/2026
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#Creates and runs a grid scan of two specified parameters
+#Can run subscans with different phi/angle2 values
+
+#python -m pyshape.scan.run_grid -ps -90 90 10 0 360 10 -mod mod.h.template -obs obs.h.template
+#python -m pyshape.scan.run_grid -ps -90 90 10 0 360 10 -a2r 0 355 5
+#This code is very slow when doing many subscans
 
 import argparse
 from dataclasses import fields
@@ -11,11 +20,6 @@ from rich.progress import Progress
 from ..mod.mod_io import modFile
 from ..cli_config import logger, error_exit, console
 from . import scan_io
-
-#python -m pyshape.scan.run_grid -ps -90 90 10 0 360 10 -mod mod.h.template -obs obs.h.template
-#python -m pyshape.scan.run_grid -ps -90 90 10 0 360 10 -a2r 0 355 5
-#non polescan grid searches are untested but should work. Let me know if not
-#This code is very slow when doing at many angles
 
 def run_grid_scan(args):
         

@@ -1,4 +1,13 @@
-#Last modified 06/04/2026
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#Ranks log files by chisqr
+#Can be used to delete files below set thresholds
+
+#python -m rank_fits
+#python -m rank_fits --dirname not_logfiles --top 10 --chi-type Doppler
+#chi-type must be one of ['ALLDATA','Doppler','delay','lghtcrv']
 
 from ..cli_config import logger, error_exit, safe_exit
 from ..utils import check_type
@@ -6,10 +15,6 @@ from .. import log_file
 from pathlib import Path
 import argparse
 import logging
-
-#python -m rank_fits
-#python -m rank_fits --dirname not_logfiles --top 10 --chi-type Doppler
-#chi-type must be one of ['ALLDATA','Doppler','delay','lghtcrv']
 
 def rank(dirname:Path, top:int = 5, chi_type:str = 'ALLDATA', percent:bool = False, delete:bool = False):
     

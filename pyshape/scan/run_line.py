@@ -1,4 +1,11 @@
-#Last modified 12/09/2025
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#Note tested in a long time, might not work. Can be approximated by just running a small grid scan!
+
+#python -m line_scan -z 0.9 1.1 0.02
+#non polescan line searches are untested but should work. Let me know if not
 
 import argparse
 import dataclasses
@@ -10,9 +17,6 @@ from pathlib import Path
 import numpy as np
 from ..cli_config import logger, error_exit
 from .. import utils, mod
-
-#python -m line_scan -z 0.9 1.1 0.02
-#non polescan line searches are untested but should work. Let me know if not
 
 def line_scan_setup(p,mod_template,obs_template,outf):
 

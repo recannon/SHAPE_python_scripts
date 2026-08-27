@@ -1,4 +1,8 @@
-#Last modified 12/09/2025
+#Last modified by @recannon 27/08/2026
+
+#27/08/2026 - More Documentation
+
+#Reads in many logfiles at once for plot functions/rank to use
 
 import dataclasses
 import glob
