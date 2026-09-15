@@ -1,12 +1,16 @@
 #Last modified by @recannon on 01/06/2026
 
+#15/09/2026 - Subfunctions from utils for moments and dd routines
+#01/06/2026
+
 import argparse
 import logging
 from pathlib import Path
 import subprocess
 from pyshape.obs.obs_io import obsFile
 from pyshape.cli_config import logger, error_exit
-from pyshape.utils import check_type, check_file, check_dir, empty_dir, run_shape
+from pyshape import utils
+# utils import check_type, check_file, check_dir, empty_dir, run_shape, compile_moments_output, ppmstack_cmd_list,
 from pyshape.plotting import quick_routines as qp
 import pyshape.log_file as log_file
 
@@ -45,12 +49,14 @@ def write_quick(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='
 
     #Empty waction folder without trying to remove directories
     #Ignore errors as there should not be anything of importance in temp
-    empty_dir(temp_path, remove_dirs=False, ignore_errors=True)
+    utils.empty_dir(temp_path, remove_dirs=False, ignore_errors=True)
 
     #Run moments followed by write with shape
-    run_shape([mparfile, modfile, obsfile], 
+    #Moments doesn't need shape if show_unseen is excluded
+    #This speeds it up dramatically as reading obsfiles takes ages
+    utils.run_shape([mparfile, modfile],#, obsfile], 
               run_dir=temp_path, out_log=maction_log)
-    run_shape([wparfile, modfile, obsfile],
+    utils.run_shape([wparfile, modfile, obsfile],
               run_dir=temp_path, out_log=waction_log)
 
     #Print chisqr. Can treat the wpar file as a log file for this purpose
@@ -60,20 +66,11 @@ def write_quick(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='
     logger.info('Creating jpgs')
 
     #Collage mpar figures
-    pos_files = sorted((temp_path).glob('*pos.ppm'))
-    neg_files = sorted((temp_path).glob('*neg.ppm'))    
-    mpar_ppm  = temp_path / 'mpar.ppm'
-    mpar_jpg  = temp_path / '1_mpar.jpg'
+    pa_files = sorted(temp_path.glob('pa*'))
+    mpar_jpg = temp_path / '1_mpar.jpg'
+    mpar_log_file = waction_path / 'mpar_stack.log'
+    utils.compile_moments_output(pa_files,mpar_jpg,mpar_log_file)
     
-    #ppmstack and ffmpeg to merge then convert ppm->jpg
-    ppmstack_cmd = ['ppmstack', '3', '1', '1'] + [str(f) for f in pos_files + neg_files] + [str(mpar_ppm)]
-    ffmpeg_cmd = ['ffmpeg','-loglevel', 'error', '-hide_banner', '-i', str(mpar_ppm), str(mpar_jpg)]
-    with open(waction_path / 'mpar_stack.log', 'w') as log:
-        logger.debug(f'Running: {" ".join(ppmstack_cmd)}')
-        subprocess.run(ppmstack_cmd, cwd=temp_path, stdout=log, stderr=subprocess.STDOUT, check=True)
-        logger.debug(f'Running: {" ".join(ffmpeg_cmd)}')
-        subprocess.run(ffmpeg_cmd, cwd=temp_path, stdout=log, stderr=subprocess.STDOUT, check=True)
-
     #Read obsfile to check for which data types are present
     obs_sets  = obsFile.from_file(obsfile).datasets
     set_types = set(o.set_type for o in obs_sets) 
@@ -81,34 +78,45 @@ def write_quick(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='
     #delay-Doppler requires stacking of pgm images
     if 'delay-doppler' in set_types:
         
-        obs_frames = sorted((temp_path).glob("obs_*.pgm"))
-        fit_frames = sorted((temp_path).glob("fit_*.pgm"))
-        res_frames = sorted((temp_path).glob("res_*.pgm"))
-        sky_frames = [str(name).replace('obs_', 'sky_').replace('.pgm', '.ppm') for name in obs_frames]        
-        temp_frames = [str(name).replace('sky_','temp_') for name in sky_frames]
-        no_frames  = len(temp_frames)
-        no_rows    = no_frames//no_cols + int(no_frames % no_cols != 0)
-
-        with open(temp_path / 'dd_stack.sh','w') as f:
-            
-            for i in range(len(temp_frames)):
-                parts = [obs_frames[i], fit_frames[i]]
+        obs_frames = sorted(temp_path.glob('obs_*.pgm'))
+        fit_frames = sorted(temp_path.glob('fit_*.pgm'))
+        res_frames = sorted(temp_path.glob('res_*.pgm')) if res else []
+        sky_frames = [Path(str(f).replace('obs_', 'sky_').replace('.pgm', '.ppm')) for f in obs_frames]
+        no_frames = len(obs_frames)
+        no_rows = no_frames // no_cols + int(no_frames % no_cols != 0)
+        n_components = 4 if res else 3
+        dd_fits_ppm = current_path / 'waction' / 'temp' / 'dd_fits.ppm'
+        dd_fits_jpg = current_path / 'waction' / 'temp' / '2_dd_fits.jpg'
+        script_lines = []
+        
+        #Stacks columns
+        column_files = []
+        for c in range(no_cols):
+            idxs = range(c * no_rows, min((c + 1) * no_rows, no_frames))
+            flat_files = []
+            for i in idxs:
+                flat_files += [obs_frames[i], fit_frames[i]]
                 if res:
-                    parts.append(res_frames[i])
-                parts.append(sky_frames[i])
-                parts.append(temp_frames[i])
-                f.write(f'ppmstack {len(parts)-1} 1 1 {" ".join(map(str, parts[:-1]))} {str(parts[-1])}\n')
-                
-            #Stack columns
-            column_files = [Path(temp_frames[0]).parent / f'temp_{i:02}.ppm' for i in range(no_cols)]            
-            for i in range(no_cols):
-                f.write(f'ppmstack 1 1 1 {" ".join(map(str, temp_frames[i*no_rows:(i+1)*no_rows]))} {column_files[i]}\n')
+                    flat_files.append(res_frames[i])
+                flat_files.append(sky_frames[i])
 
-            #Group columns together
-            f.write(f'ppmstack {no_cols} 1 1 {" ".join(map(str, column_files))} {current_path}/waction/temp/dd_fits.ppm\n')
-            f.write(f'ffmpeg -loglevel error -hide_banner -i {current_path}/waction/temp/dd_fits.ppm {current_path}/waction/temp/2_dd_fits.jpg\n')
+            column_file = temp_path / f'column_{c:02}.ppm'
+            column_files.append(column_file)
+            cmd = utils.ppmstack_cmd_list(flat_files, column_file, no_cols=n_components)
+            script_lines.append(" ".join(cmd))
 
-        subprocess.run(f'bash {current_path}/waction/temp/dd_stack.sh > dd_stack.log',shell=True,check=True,cwd='waction')
+        #Commands for combine columns side by side and convert to jpg
+        cmd = utils.ppmstack_cmd_list(column_files, dd_fits_ppm, no_cols=no_cols)
+        script_lines.append(" ".join(cmd))
+        cmd = utils.ffmpeg_ppm2jpg_list(dd_fits_ppm, dd_fits_jpg)
+        script_lines.append(" ".join(cmd))
+
+        #Write all commands in a script and run together
+        script_path = temp_path / 'dd_stack.sh'
+        script_path.write_text("\n".join(script_lines) + "\n")
+        with open(temp_path / 'dd_stack.log', 'w') as log:
+            subprocess.run(['bash', str(script_path)], stdout=log,
+                            stderr=subprocess.STDOUT, check=True, cwd='waction')
 
     #lc and cw can be plotted with functions
     if 'lightcurve' in set_types:
@@ -172,10 +180,10 @@ def validate_args(args):
         logger.debug('Verbose: Set level to DEBUG')
 
     #Check optional inputs
-    args.no_cols = check_type(args.no_cols,'--no-cols',int)        
-    args.mparfile = check_file(args.mparfile)
-    args.wparfile = check_file(args.wparfile)
-    args.outdir = check_dir(args.outdir, create=True)
+    args.no_cols = utils.check_type(args.no_cols,'--no-cols',int)        
+    args.mparfile = utils.check_file(args.mparfile)
+    args.wparfile = utils.check_file(args.wparfile)
+    args.outdir = utils.check_dir(args.outdir, create=True)
 
     #If all, don't check modfile/obsfile
     if args.all:
@@ -200,8 +208,8 @@ def validate_args(args):
             args.obsfile = Path(args.obsfile)
             
         #Check files exist
-        args.modfile = check_file(args.modfile)
-        args.obsfile = check_file(args.obsfile)
+        args.modfile = utils.check_file(args.modfile)
+        args.obsfile = utils.check_file(args.obsfile)
 
     return args
 

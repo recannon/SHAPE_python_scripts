@@ -25,14 +25,17 @@ def facet_lighting(light_dir, view_dir, normals, facet_id,
     white = np.array([1.0, 1.0, 1.0])
     if red_facets is not None and facet_id in red_facets:
         bright = np.array([1.0, 0.0, 0.0])  # pure red
-        shaded_colour = bright + (white - bright) * spec  # white highlight
-        shaded_colour = np.clip(shaded_colour, 0, 1)
+        face_colour = bright + (white - bright) * spec  # white highlight
+        face_colour = np.clip(face_colour, 0, 1)
     elif yellow_facets is not None and facet_id in yellow_facets:
         bright = np.array([1.0, 1.0, 0.0])  # pure yellow
-        shaded_colour = bright + (white - bright) * spec
-        shaded_colour = np.clip(shaded_colour, 0, 1)
+        face_colour = bright + (white - bright) * spec
+        face_colour = np.clip(face_colour, 0, 1)
     else:
         base_colour = np.array([0.8, 0.8, 0.8])
-        shaded_colour = base_colour * intensity
+        face_colour = base_colour * intensity
     
-    return shaded_colour
+    # edge_colour = np.array([0.8, 0.8, 0.8]) * intensity
+    edge_colour = face_colour
+    
+    return face_colour, edge_colour

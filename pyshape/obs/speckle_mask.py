@@ -35,7 +35,7 @@ def speckle_mask(fname:Path, sets_affected:list[int], mask_dir:Path):
         set_type = obs_set.set_type
 
         #Check set is requested and correct type
-        if set_no in sets_affected and set_type == 'delay-doppler':            
+        if set_no in sets_affected and set_type == 'delay-doppler':                        
             
             frames = obs_set.frames
             masked = [fr.mask for fr in frames]
@@ -63,6 +63,7 @@ def speckle_mask(fname:Path, sets_affected:list[int], mask_dir:Path):
                 #Create speckle mask
                 thresh = 3.66 * np.sqrt(no_looks)
                 logger.info(f'Thresh: {thresh}\nMaximum data: {np.abs(fits_data).max()}')
+                logger.debug(f'Number of pixels above thresh: {np.sum(fits_data>thresh)}')
                 speckle_mask = (thresh / np.maximum(np.abs(fits_data), thresh)) ** 2
                 
                 if mask_file.is_file():
@@ -98,7 +99,8 @@ def speckle_mask(fname:Path, sets_affected:list[int], mask_dir:Path):
 #===Functions for parsing args below this point===
 def parse_args():
     '''Parse command-line arguments.'''
-    parser = argparse.ArgumentParser(description='Adjust masking of obsfile data sets to limit signal to speckle noise threshold')
+    parser = argparse.ArgumentParser(description='Adjust masking of obsfile data sets to limit signal to speckle noise threshold',
+                                     epilog='Recommended that you duplicate your mask directory, as this will work in place')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Enable verbose output (sets log level to DEBUG)')
 

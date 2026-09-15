@@ -1,16 +1,16 @@
 #!/bin/bash
-#SBATCH --job-name=jo25
-#SBATCH --time=12:00:00               # Time limit in the format hr:min:sec​
+#SBATCH --job-name=on-1.-02
+#SBATCH --time=48:00:00               # Time limit in the format hr:min:sec​
 #SBATCH --output=./faction/job_output_%j.log    # Output file (with job ID in the filename)​
 #SBATCH --error=./faction/job_error_%j.log      # Error file (with job ID in the filename)​
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=8
+#SBATCH --ntasks-per-node=12
 #SBATCH --mem=2G
 #SBATCH --exclude=worker[096]
 
 # sbatch --array=1-N launch_fitting.sbatch [a2]
 
-NCORES=8
+NCORES=12
 
 module purge
 module load compiler mpi

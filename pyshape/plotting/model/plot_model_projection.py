@@ -48,14 +48,14 @@ def plot_model_projection(vertices,facets,normals,
             case _: raise ValueError(f'Invalid view: {view!r}')
 
         #Get colour
-        colour = facet_lighting(light_dir, view_dir, normals[n], n,
+        face_colour,edge_colour = facet_lighting(light_dir, view_dir, normals[n], n,
                                 red_facets=red_list,
                                 yellow_facets=yellow_list)
 
         #Each pc is only one vertex. Otherwise this can screw with concavities
         pc = PolyCollection([verts], zorder=zorder)
-        pc.set_facecolor(colour)
-        pc.set_edgecolor(colour)
+        pc.set_facecolor(face_colour)
+        pc.set_edgecolor(edge_colour)
         ax.add_collection(pc)
         
     return ax
