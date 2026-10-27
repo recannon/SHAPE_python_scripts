@@ -1,11 +1,11 @@
 #Last modified by @recannon 08/04/2026
 #Tests for functions within run_grid
 
-import pytest
-import shutil
-from pathlib import Path
+# import pytest
+# import shutil
+# from pathlib import Path
 
-from pyshape.scan.run_grid import setup_grid_scan, create_polescan_lists
+# from pyshape.scan.run_grid import setup_grid_scan, create_polescan_lists
 
 #===Tests===
 
