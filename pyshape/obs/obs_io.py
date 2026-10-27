@@ -11,7 +11,7 @@
 from dataclasses import dataclass
 from typing import Union, Type
 from ..utils import time_shape2astropy, time_astropy2shape
-from ..cli.cli_config import logger, error_exit
+from ..cli.config import logger, error_exit
 from astropy.time import Time
 
 class obsFile:

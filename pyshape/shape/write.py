@@ -5,7 +5,7 @@
 import argparse
 import logging
 from pathlib import Path
-from pyshape.cli.cli_config import logger
+from pyshape.cli.config import logger
 from pyshape import utils
 from pyshape.obs.obs_io import obsFile
 import pyshape.log_file as log_file

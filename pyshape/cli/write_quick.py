@@ -9,7 +9,7 @@ import logging
 from pathlib import Path
 import subprocess
 from ..obs.obs_io import obsFile
-from .cli_config import logger, error_exit
+from .config import logger, error_exit
 from .. import utils
 from ..plotting import quick_routines as qp
 from .. import log_file

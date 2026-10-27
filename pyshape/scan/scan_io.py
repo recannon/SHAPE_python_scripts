@@ -9,7 +9,7 @@ import glob
 import numpy as np
 from pathlib import Path
 from .. import log_file
-from ..cli.cli_config import logger,error_exit
+from ..cli.config import logger,error_exit
 
 #===Read polescans===
 # def polescan_results(scan_dir):

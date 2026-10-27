@@ -19,7 +19,7 @@ from pathlib import Path
 import subprocess
 import numpy as np
 from . import shuffle_vertices
-from ..cli.cli_config import logger, error_exit
+from ..cli.config import logger, error_exit
 from .mod_io import modFile
 import tempfile
 

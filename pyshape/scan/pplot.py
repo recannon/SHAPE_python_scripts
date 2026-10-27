@@ -15,7 +15,7 @@ import matplotlib.ticker as mticker
 import matplotlib.tri as tri
 import numpy as np
 from scipy.interpolate import griddata
-from ..cli.cli_config import logger, error_exit
+from ..cli.config import logger, error_exit
 from ..utils import check_dir, check_type
 from . import scan_io
 

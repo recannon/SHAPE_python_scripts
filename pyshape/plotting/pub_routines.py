@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from astropy.time import Time
 from astropy.stats import sigma_clip
-from ..cli.cli_config import logger
+from ..cli.config import logger
 from .model.plot_model_projection import plot_model_projection
 
 # Colorblind-friendly colors

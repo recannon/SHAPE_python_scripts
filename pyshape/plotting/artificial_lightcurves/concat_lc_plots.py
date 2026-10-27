@@ -5,7 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 import argparse
 import logging
-from ...cli.cli_config import logger, error_exit
+from ...cli.config import logger, error_exit
 from ...utils import check_dir
 from ...jinja_env import render_and_compile_pdf
 

@@ -7,9 +7,9 @@
 #Helper functions for use throughout the scripts
 import tempfile
 from astropy.time import Time
-from .cli.cli_config import error_exit
+from .cli.config import error_exit
 from pathlib import Path
-from .cli.cli_config import logger
+from .cli.config import logger
 import subprocess
 
 #===Helper functions for checking input arguments

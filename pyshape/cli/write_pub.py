@@ -5,7 +5,7 @@ import argparse
 import logging
 from pathlib import Path
 import subprocess
-from .cli_config import logger, error_exit
+from .config import logger, error_exit
 from ..plotting import pub_routines as pp
 from ..obs.obs_io import obsFile
 from ..utils import check_file, check_dir, empty_dir, run_shape

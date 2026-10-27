@@ -27,7 +27,7 @@ import numpy as np
 from pathlib import Path
 import re
 from .mod_io import modFile
-from ..cli.cli_config import logger, error_exit
+from ..cli.config import logger, error_exit
 from ..utils import check_file
 
 def freeze_mod(fname, mod_type, freeze, components=None, map_file=None):

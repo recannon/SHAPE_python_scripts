@@ -9,7 +9,7 @@
 from dataclasses import dataclass, field
 from typing import ClassVar, Literal
 from astropy.time import Time
-from ..cli.cli_config import logger
+from ..cli.config import logger
 from ..utils import time_shape2astropy
 import numpy as np
 from ..jinja_env import template_env

@@ -18,7 +18,7 @@ from pathlib import Path
 import numpy as np
 from rich.progress import Progress
 from ..mod.mod_io import modFile
-from ..cli.cli_config import logger, error_exit, console
+from ..cli.config import logger, error_exit, console
 from . import scan_io
 
 def run_grid_scan(args):

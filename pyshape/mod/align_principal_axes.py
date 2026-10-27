@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 import argparse
 import logging
-from ..cli.cli_config import logger, error_exit
+from ..cli.config import logger, error_exit
 from .mod_io import modFile
 
 def _moments(V, F):

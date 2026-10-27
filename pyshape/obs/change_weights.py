@@ -11,7 +11,7 @@ from .obs_io import obsFile
 import argparse
 from pathlib import Path
 import glob
-from ..cli.cli_config import logger
+from ..cli.config import logger
 
 def change_weights(fname,obs_type,new_weights,sets_affected=None):
 
