@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyshape"
+version = "0.1.0"
+description = "Shape modeling and analysis tools for lightcurves and observations"
+readme = "README.md"
+requires-python = ">=3.15"
+license = "MIT"
+authors = [
+    {name = "Richard Cannon", email = "richard.cannon@ed.ac.uk"}
+]
+
+dependencies = [
+    "numpy>=2.5.4",
+    "matplotlib>=3.11.2",
+    "pandas>=3.1.0",
+    "astropy>=8.0.2",
+    "rich>=15.0.0",
+    "scipy>=1.18.1",
+    "cartopy>=0.26.0",
+    "healpy>=1.20.1",
+    "trimesh>=5.2.0",
+    "jinja2>=3.1.6",
+    "cmasher>=1.9.4",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+write_pub = "pyshape.cli.write_pub:main"
+write_quick = "pyshape.cli.write_quick:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pyshape*"]  # Only include the pyshape package
+exclude = ["notebooks*", "tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v"

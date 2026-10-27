@@ -9,7 +9,7 @@
 #python -m rank_fits --dirname not_logfiles --top 10 --chi-type Doppler
 #chi-type must be one of ['ALLDATA','Doppler','delay','lghtcrv']
 
-from ..cli_config import logger, error_exit, safe_exit
+from ..cli.cli_config import logger, error_exit, safe_exit
 from ..utils import check_type
 from .. import log_file
 from pathlib import Path

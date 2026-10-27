@@ -11,7 +11,7 @@
 from dataclasses import dataclass
 from typing import Union, Type
 from ..utils import time_shape2astropy, time_astropy2shape
-from ..cli_config import logger, error_exit
+from ..cli.cli_config import logger, error_exit
 from astropy.time import Time
 
 class obsFile:
@@ -281,8 +281,6 @@ class ObsDelayDoppler(ObsSet):
 
         for i, frame in enumerate(self.frames):
             self.set_lines[start + i] = frame.to_line()
-
-            
             
 
 #===LIGHT CURVE===

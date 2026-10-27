@@ -5,7 +5,7 @@
 #File with functions for reading convex inversion input and output files.
 #Mainly for plotting lightcurves with pub_plot
 
-from .cli_config import logger
+from .cli.cli_config import logger
 import numpy as np
 import re
 

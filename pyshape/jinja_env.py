@@ -8,7 +8,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from .utils import time_astropy2shape
 import subprocess
-from .cli_config import logger
+from .cli.cli_config import logger
 
 #Paths
 script_dir = Path(__file__).resolve().parent

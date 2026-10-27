@@ -1,5 +1,6 @@
-#Last modified by @recannon on 01/06/2026
+#Last modified by @recannon on 07/10/2026
 
+#07/10/2026 - Moved all moments processing out of this script into moments.py
 #15/09/2026 - Subfunctions from utils for moments and dd routines
 #01/06/2026
 
@@ -7,12 +8,12 @@ import argparse
 import logging
 from pathlib import Path
 import subprocess
-from pyshape.obs.obs_io import obsFile
-from pyshape.cli_config import logger, error_exit
-from pyshape import utils
-# utils import check_type, check_file, check_dir, empty_dir, run_shape, compile_moments_output, ppmstack_cmd_list,
-from pyshape.plotting import quick_routines as qp
-import pyshape.log_file as log_file
+from ..obs.obs_io import obsFile
+from .cli_config import logger, error_exit
+from .. import utils
+from ..plotting import quick_routines as qp
+from .. import log_file
+from ..shape.moments import run_and_compile_moments 
 
 def write_quick(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.',no_cols=3,res=False):
     """
@@ -36,8 +37,8 @@ def write_quick(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='
     #Paths
     current_path = Path.cwd()
     waction_path = current_path / 'waction'
-    temp_path    = current_path / 'waction/temp'
-    maction_log  = waction_path / f'{identifier}.wpar.log'
+    temp_path    = waction_path / 'temp'
+    maction_log  = waction_path / f'{identifier}.mpar.log'
     waction_log  = waction_path / f'{identifier}.wpar.log'
     
     #Changes filepaths to absolute paths. Needed as shape functions are run from ./waction, not ./
@@ -51,11 +52,12 @@ def write_quick(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='
     #Ignore errors as there should not be anything of importance in temp
     utils.empty_dir(temp_path, remove_dirs=False, ignore_errors=True)
 
-    #Run moments followed by write with shape
-    #Moments doesn't need shape if show_unseen is excluded
-    #This speeds it up dramatically as reading obsfiles takes ages
-    utils.run_shape([mparfile, modfile],#, obsfile], 
-              run_dir=temp_path, out_log=maction_log)
+    #Runs moments and compiles result into a jpg
+    #Going to assume that obsfile is not required to speed it up! (Only needed if you have show_unseen in mpar)
+    run_and_compile_moments(mparfile, modfile, None, mpar_logfile=maction_log, figfile=temp_path / '1_mpar.jpg')
+
+    #Run write action
+    logger.info('Running write')
     utils.run_shape([wparfile, modfile, obsfile],
               run_dir=temp_path, out_log=waction_log)
 
@@ -65,12 +67,6 @@ def write_quick(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='
 
     logger.info('Creating jpgs')
 
-    #Collage mpar figures
-    pa_files = sorted(temp_path.glob('pa*'))
-    mpar_jpg = temp_path / '1_mpar.jpg'
-    mpar_log_file = waction_path / 'mpar_stack.log'
-    utils.compile_moments_output(pa_files,mpar_jpg,mpar_log_file)
-    
     #Read obsfile to check for which data types are present
     obs_sets  = obsFile.from_file(obsfile).datasets
     set_types = set(o.set_type for o in obs_sets) 

@@ -11,7 +11,7 @@ from .obs_io import obsFile
 import argparse
 from pathlib import Path
 import logging
-from ..cli_config import logger, error_exit
+from ..cli.cli_config import logger, error_exit
 from ..utils import check_file, check_dir
 from astropy.io import fits
 import numpy as np

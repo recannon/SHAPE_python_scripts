@@ -10,4 +10,5 @@ pub_lc_test.ipynb
 test.ipynb
 todo.txt
 monitor_fit.scrontab
-shape_to_obj.py
+*.egg-info
+*.pytest_cache

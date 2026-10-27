@@ -12,7 +12,7 @@ import numpy as np
 from scipy.interpolate import griddata
 from . import scan_io
 from ..plotting import quick_routines as pq
-from ..cli_config import logger, error_exit
+from ..cli.cli_config import logger, error_exit
 from ..utils import check_dir, check_type
 
 def config_quick_scan(p1: np.array, p2: np.array, chi: np.array,

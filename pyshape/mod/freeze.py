@@ -1,5 +1,6 @@
-#Last modified by @recannon 27/08/2026
+#Last modified by @recannon 08/10/2026
 
+#08/10/2026 - Added functionality with map action
 #27/08/2026 - More Documentation
 
 #Used to change the freeze state of sets of parameters in a modfile, or directory of modfiles
@@ -13,17 +14,25 @@ SPIN_DEFAULTS = {
     'p': ('phi', 'P'),
 }
 
-import argparse
-import glob
-import logging
-from pathlib import Path
-from ..cli_config import logger, error_exit
-from .mod_io import modFile
+MOD_DICT = {
+    'e' : 'ellipse',
+    'h' : 'harmonic',
+    'v' : 'vertex',
+}
 
-def freeze_mod(fname, mod_type, freeze, components=None):
+import argparse
+import itertools
+import logging
+import numpy as np
+from pathlib import Path
+import re
+from .mod_io import modFile
+from ..cli.cli_config import logger, error_exit
+from ..utils import check_file
+
+def freeze_mod(fname, mod_type, freeze, components=None, map_file=None):
     '''
     Takes modfile {fname} and freezes or unfreezes all variable factors for specified components. 
-    If scale factor was set to = then remains unchanged.
 
     Inputs:
         fname      : Filename to change, preferably from root path
@@ -42,15 +51,27 @@ def freeze_mod(fname, mod_type, freeze, components=None):
 
     mod_type = mod_type.lower()
 
-    mod_dict = {
-        'e' : 'ellipse',
-        'h' : 'harmonic',
-        'v' : 'vertex',
-    }
+    if map_file is not None and mod_type == 'v':
 
-    if mod_type in ['e','v','h']:
+        component_list = mod_info.components
         
-        comp_type = mod_dict[mod_type]
+        #Reads facets and sorted by component first, then facet number. Removes duplicates
+        facets = sorted({(int(m.group(1)), int(m.group(2))) for l in open(map_file)
+                 if (m := re.match(r'# comp (\d+) facet\s+(\d+)', l))})
+        logger.info(f'{len(facets)} facets found in map file {map_file}')
+        
+        for comp_no, group in itertools.groupby(facets, key=lambda x: x[0]):
+            if components is not None and comp_no not in components:
+                continue
+            comp = component_list[comp_no]
+            listed = set(np.unique(comp.facets[[f for _, f in group]]).tolist())
+            comp.vertices_freeze = [freeze if i in listed else s
+                                    for i, s in enumerate(comp.vertices_freeze)]        
+            logger.info(f'Changing {len(listed)} vertices in component {comp_no} to {freeze}')
+        
+    elif mod_type in MOD_DICT:
+        
+        comp_type = MOD_DICT[mod_type]
         _freeze_components(
             mod_info=mod_info,
             freeze=freeze,
@@ -96,6 +117,8 @@ def parse_args():
     parser.add_argument('fname',    type=str, help='Name of file to affect. If directory, will affect all .mod files in directory')
     parser.add_argument('mod_type', type=str, help='Type of component expected')
     parser.add_argument('freeze',   type=str, help='[ f, c, = ] . Change variables to this str')
+    parser.add_argument('--map', type=str, default=None, 
+                        help='Can be used to affect only vertices visible in provided map file. Use with mod_type = v')
 
     parser.add_argument('-c', '--components', nargs='+', type=int, default=None,
                         help='Optional list of components to affect')
@@ -109,9 +132,13 @@ def validate_args(args):
         logger.setLevel(logging.DEBUG)
         logger.debug('Verbose: Set level to DEBUG')
 
-    if args.mod_type not in ['e','v','h','s','p']:
+    if args.mod_type not in MOD_DICT and args.mod_type not in SPIN_DEFAULTS:
         error_exit('Cannot understand input mod_type. Check documentation for valid inputs')
-
+    elif args.map is not None:
+        if args.mod_type != 'v':
+            error_exit('Cannot use --map without mod_type = v')
+        args.map = check_file(args.map)
+        
     if args.freeze not in ['f','c','=']:
         error_exit('freeze string must be one of "f", "c", or "="')
 
@@ -125,12 +152,12 @@ def main():
 
     if Path(args.fname).is_file():
         logger.info(f'Running script on file {args.fname}')
-        freeze_mod(args.fname,args.mod_type,args.freeze,args.components)
+        freeze_mod(args.fname,args.mod_type,args.freeze,args.components,args.map)
     elif Path(args.fname).is_dir():
         logger.info(f'Running script on directory {args.fname}/*.mod')
-        modfiles = glob.glob(f'{args.fname}/*.mod')
+        modfiles = Path(args.fname).glob('*.mod')
         for mod in modfiles:
-            freeze_mod(mod,args.mod_type,args.freeze,args.components)
+            freeze_mod(mod,args.mod_type,args.freeze,args.components,args.map)
     else:
         raise error_exit('Cannot find file or directory with name [fname]')
 

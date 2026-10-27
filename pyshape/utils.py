@@ -1,14 +1,15 @@
-#Last modified by @recannon 15/09/2026
+#Last modified by @recannon 07/10/2026
 
+#07/10/2026 - mpar handling moved out. ffmpeg set to always force overwrite
 #15/09/2026 - mpar and ppm handling functions
 #27/08/2026 - More Documentation
 
 #Helper functions for use throughout the scripts
 import tempfile
 from astropy.time import Time
-from .cli_config import error_exit
+from .cli.cli_config import error_exit
 from pathlib import Path
-from .cli_config import logger
+from .cli.cli_config import logger
 import subprocess
 
 #===Helper functions for checking input arguments
@@ -76,7 +77,6 @@ def run_shape(args: list[str|Path], run_dir: str|Path, out_log: str|Path):
     args = [check_file(arg).resolve() for arg in args]
     run_dir = check_dir(run_dir).resolve()
 
-    logger.info(f'Running {args[0].name}')
     logger.debug(f'shape {" ".join(map(str, args))}')
 
     with out_log.open('w') as log:
@@ -85,39 +85,13 @@ def run_shape(args: list[str|Path], run_dir: str|Path, out_log: str|Path):
                            stdout=log, stderr=subprocess.STDOUT,  check=True)
         except subprocess.CalledProcessError:
             error_exit(f'Problem running {args[0].name} action. Check {out_log}')
-
-def compile_moments_output(pa_view_files, out_jpg, log_file):
-    pa_view_files = sorted(check_file(f) for f in pa_view_files)
-    pos_files = [f for f in pa_view_files if 'pos' in str(f)]
-    neg_files = [f for f in pa_view_files if 'neg' in str(f)]
-    out_jpg = Path(out_jpg).resolve()
-    log_file = Path(log_file).resolve()
-    #3 columns so for 3 principal axis views
-    with tempfile.TemporaryDirectory() as tmp:
-        tmp_path = Path(tmp)
-        temp_ppm = tmp_path / 'pa_views.ppm'
-
-        # ppmstack_cmd = (['ppmstack', '3', '1', '1']
-        #                  + [str(f) for f in pos_files + neg_files]
-        #                  + [str(temp_ppm)])
-        # ffmpeg_cmd = ['ffmpeg', '-loglevel', 'error', '-hide_banner',
-        #               '-i', str(temp_ppm), str(out_jpg)]
-        ppmstack_cmd = ppmstack_cmd_list([str(f) for f in pos_files + neg_files], str(temp_ppm), 3)
-        ffmpeg_cmd = ffmpeg_ppm2jpg_list(str(temp_ppm), str(out_jpg))
-
-        with open(log_file, 'w') as log:
-            for cmd in (ppmstack_cmd, ffmpeg_cmd):
-                logger.debug(f'Running: {" ".join(cmd)}')
-                subprocess.run(cmd, cwd=tmp_path, stdout=log,
-                                stderr=subprocess.STDOUT, check=True)
-    return
     
 def ppmstack_cmd_list(files:list[str|Path], out_file:str|Path, no_cols=3):
     '''Runs SHAPE ppmstack command'''
     return ['ppmstack', str(no_cols), '1', '1', *(str(f) for f in files), str(out_file)]
 
 def ffmpeg_ppm2jpg_list(ppm_file:str|Path,jpg_file:str|Path):
-    return ['ffmpeg', '-loglevel', 'error', '-hide_banner', '-i', str(ppm_file), str(jpg_file)]
+    return ['ffmpeg', '-loglevel', 'error', '-hide_banner', '-y', '-i', str(ppm_file), str(jpg_file)]
 
 #===Shape time formatting for mod/obs files
 def time_shape2astropy(t: str) -> Time:

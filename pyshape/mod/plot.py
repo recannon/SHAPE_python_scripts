@@ -9,7 +9,7 @@
 import argparse
 import logging
 from pathlib import Path
-from pyshape.cli_config import logger
+from pyshape.cli.cli_config import logger
 from pyshape.utils import check_file
 from pyshape.mod.mod_io import modFile
 from dataclasses import dataclass
@@ -23,8 +23,8 @@ import re
 
 titlesize = 30
 labelsize = 25
-no_rows = 4
-no_cols = 4
+no_rows = 1
+no_cols = 3
 
 def generate_lims_and_ticks(vertices):
     '''Round down to a axis tick that is a multiple of 1,2,3,5'''

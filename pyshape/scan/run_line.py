@@ -15,7 +15,7 @@ import shutil
 import subprocess
 from pathlib import Path
 import numpy as np
-from ..cli_config import logger, error_exit
+from ..cli.cli_config import logger, error_exit
 from .. import utils, mod
 
 def line_scan_setup(p,mod_template,obs_template,outf):

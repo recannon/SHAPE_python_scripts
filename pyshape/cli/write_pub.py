@@ -5,13 +5,13 @@ import argparse
 import logging
 from pathlib import Path
 import subprocess
-from pyshape.obs.obs_io import obsFile
-from pyshape.cli_config import logger, error_exit
-import pyshape.plotting.pub_routines as pp
-from pyshape.utils import check_file, check_dir, empty_dir, run_shape
-from pyshape.jinja_env import render_and_compile_pdf
-from pyshape.mod.mod_io import modFile
-from pyshape.plotting import artificial_lightcurves
+from .cli_config import logger, error_exit
+from ..plotting import pub_routines as pp
+from ..obs.obs_io import obsFile
+from ..utils import check_file, check_dir, empty_dir, run_shape
+from ..jinja_env import render_and_compile_pdf
+from ..mod.mod_io import modFile
+from ..plotting import artificial_lightcurves
 from dataclasses import dataclass
 import trimesh
 
