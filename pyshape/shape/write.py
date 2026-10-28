@@ -5,25 +5,24 @@
 import argparse
 import logging
 from pathlib import Path
-from pyshape.cli.config import logger
-from pyshape import utils
-from pyshape.obs.obs_io import obsFile
-import pyshape.log_file as log_file
+from ..cli.config import logger
+from .. import utils
+from ..obs.obs_io import obsFile
+from .. import log_file
 import tempfile
-import subprocess
-from pyshape.plotting import quick_routines as qp
+from ..plotting import delay_doppler, doppler, lightcurves
 
 def run_and_compile_write(wparfile:str|Path, modfile:str|Path, obsfile:str|Path,
                           wpar_logfile:str|Path,
                           dd_no_cols:int, dd_res:bool, 
-                          dd_figfile:str|Path, cw_figfile:str|Path, lc_figfile:str|Path)
+                          dd_figfile:str|Path, cw_figfile:str|Path, lc_figfile:str|Path):
 
     write_inputs =[Path(f).resolve() for f in [wparfile,modfile,obsfile]]
 
     with tempfile.TemporaryDirectory() as tmp:
         
         tmp_path = Path(tmp)
-        logger.info('Running moments')
+        logger.info('Running write')
         utils.run_shape(write_inputs, run_dir=tmp_path, out_log=wpar_logfile)
         
         #Print chisqr. Can treat the wpar file as a log file for this purpose
@@ -42,55 +41,23 @@ def run_and_compile_write(wparfile:str|Path, modfile:str|Path, obsfile:str|Path,
             obs_frames = sorted(tmp_path.glob('obs_*.pgm'))
             fit_frames = sorted(tmp_path.glob('fit_*.pgm'))
             res_frames = sorted(tmp_path.glob('res_*.pgm')) if dd_res else []
-            sky_frames = [Path(str(f).replace('obs_', 'sky_').replace('.pgm', '.ppm')) for f in obs_frames]
-            no_frames = len(obs_frames)
-            no_rows = no_frames // dd_no_cols + int(no_frames % dd_no_cols != 0)
-            n_components = 4 if dd_res else 3
-            dd_fits_ppm = tmp_path / 'dd_fits.ppm'
-            dd_fits_jpg = dd_figfile
-            script_lines = []
+            sky_frames = [f.with_name(f.name.replace('obs_', 'sky_')).with_suffix('.ppm') for f in obs_frames]
+                                    
+            delay_doppler.format_delay_doppler_images(obs_frames,fit_frames,sky_frames,
+                                                      dd_no_cols,dd_figfile,res_frames=res_frames)
             
-            #Stacks columns
-            column_files = []
-            for c in range(dd_no_cols):
-                idxs = range(c * no_rows, min((c + 1) * no_rows, no_frames))
-                flat_files = []
-                for i in idxs:
-                    flat_files += [obs_frames[i], fit_frames[i]]
-                    if dd_res:
-                        flat_files.append(res_frames[i])
-                    flat_files.append(sky_frames[i])
-
-                column_file = tmp_path / f'column_{c:02}.ppm'
-                column_files.append(column_file)
-                cmd = utils.ppmstack_cmd_list(flat_files, column_file, no_cols=n_components)
-                script_lines.append(" ".join(cmd))
-
-            #Commands for combine columns side by side and convert to jpg
-            cmd = utils.ppmstack_cmd_list(column_files, dd_fits_ppm, no_cols=dd_no_cols)
-            script_lines.append(" ".join(cmd))
-            cmd = utils.ffmpeg_ppm2jpg_list(dd_fits_ppm, dd_fits_jpg)
-            script_lines.append(" ".join(cmd))
-
-            #Write all commands in a script and run together
-            script_path = tmp_path / 'dd_stack.sh'
-            script_path.write_text("\n".join(script_lines) + "\n")
-            with open(tmp_path / 'dd_stack.log', 'w') as log:
-                subprocess.run(['bash', str(script_path)], stdout=log,
-                                stderr=subprocess.STDOUT, check=True, cwd='waction')
-
         #lc and cw can be plotted with functions
         if 'lightcurve' in set_types:
             lc_fits = sorted(tmp_path.glob("fit_??.dat"))
             #Create lightcurve plot
-            qp.quick_lightcurves(lc_fits, show=False, save=lc_figfile)
+            lightcurves.quick_lightcurves(lc_fits, show=False, save=lc_figfile)
 
         if 'doppler' in set_types:
             cw_fits = sorted(tmp_path.glob("fit_??_??.dat"))
             #Create plot
-            qp.quick_doppler(cw_fits, show=False, save=cw_figfile)
+            doppler.quick_doppler(cw_fits, show=False, save=cw_figfile)
 
-
+    return chisqr
 
 #=== Functions for parsing args beneath this point ===
 def parse_args():
@@ -102,7 +69,7 @@ def parse_args():
     input_group = parser.add_argument_group('Compulsory input files')
     input_group.add_argument('wparfile', type=str, help='write action file')  
     input_group.add_argument('modfile',  type=str, help='modfile')
-    input_group.add_argument('obsfile',  type=str, nargs='?', help='obsfile (if mpar requires)')
+    input_group.add_argument('obsfile',  type=str, help='obsfile')
     
     filedir_group = parser.add_argument_group('Specify output files')
     filedir_group.add_argument('--wpar_logfile',type=Path,default='./write.log',
@@ -117,7 +84,7 @@ def parse_args():
     dd_group = parser.add_argument_group('Delay-Doppler figure formatting options')
     dd_group.add_argument('--dd-no-cols', type=int, default=3,
                           help='Number of columns for delay-Doppler figure formatting [3]')
-    dd_group.add_argument('--dd_res', type=bool, action='store_true',
+    dd_group.add_argument('--dd_res', action='store_true',
                           help='Boolean toggle to display dd residuals [False]')
     
     return parser.parse_args()
@@ -130,7 +97,7 @@ def validate_args(args):
         logger.debug('Verbose: Set level to DEBUG')
 
     #Check files exist
-    args.mparfile = utils.check_file(args.mparfile)
+    args.wparfile = utils.check_file(args.wparfile)
     args.modfile = utils.check_file(args.modfile)
     args.obsfile = utils.check_file(args.obsfile)
 
@@ -141,7 +108,9 @@ def main():
     args = validate_args(args)    
     
     run_and_compile_write(args.wparfile, args.modfile, args.obsfile,
-                          args.logfile, args.figfile)
+                          args.wpar_logfile,
+                          args.dd_no_cols, args.dd_res,
+                          args.dd_figfile, args.cw_figfile, args.lc_figfile)
 
 if __name__ == '__main__':
     main()

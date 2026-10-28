@@ -8,12 +8,11 @@ import argparse
 import logging
 from pathlib import Path
 import subprocess
-from ..obs.obs_io import obsFile
 from .config import logger, error_exit
 from .. import utils
-from ..plotting import quick_routines as qp
-from .. import log_file
-from ..shape.moments import run_and_compile_moments 
+from .. import shape
+# from ..shape.moments import run_and_compile_moments 
+# from ..shape.write import run_and_compile_write
 
 def write_quick(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.',no_cols=3,res=False):
     """
@@ -54,76 +53,32 @@ def write_quick(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='
 
     #Runs moments and compiles result into a jpg
     #Going to assume that obsfile is not required to speed it up! (Only needed if you have show_unseen in mpar)
-    run_and_compile_moments(mparfile, modfile, None, mpar_logfile=maction_log, figfile=temp_path / '1_mpar.jpg')
+    shape.run_and_compile_moments(mparfile, modfile, None, mpar_logfile=maction_log, figfile=temp_path/'1_mpar.jpg')
 
-    #Run write action
-    logger.info('Running write')
-    utils.run_shape([wparfile, modfile, obsfile],
-              run_dir=temp_path, out_log=waction_log)
+    #Runs write and compiles results into jpgs
+    #The numbers of the jpg names determines the order that they are compiled into a pdf
+    shape.run_and_compile_write(wparfile, modfile, obsfile, wpar_logfile=waction_log,
+                                dd_no_cols=no_cols, dd_res=res,
+                                dd_figfile=temp_path/'2_dd_fits.jpg', cw_figfile=temp_path/'4_cw_fits.jpg', lc_figfile=temp_path/'3_lc_fits.jpg')
 
-    #Print chisqr. Can treat the wpar file as a log file for this purpose
-    chisqr = log_file.read(waction_log)['ALLDATA']
-    logger.info(f'Chisqr: {chisqr}')
+    # from PIL import Image
 
-    logger.info('Creating jpgs')
+    # width = 842
+    # resized = []
+    # for jpg in sorted(temp_path.glob('*.jpg')):
+    #     with Image.open(jpg) as im:
+    #         im = im.convert('RGB')
+    #         new_height = round(im.height * width / im.width)
+    #         resized.append(im.resize((width, new_height), Image.Resampling.LANCZOS))
 
-    #Read obsfile to check for which data types are present
-    obs_sets  = obsFile.from_file(obsfile).datasets
-    set_types = set(o.set_type for o in obs_sets) 
-       
-    #delay-Doppler requires stacking of pgm images
-    if 'delay-doppler' in set_types:
-        
-        obs_frames = sorted(temp_path.glob('obs_*.pgm'))
-        fit_frames = sorted(temp_path.glob('fit_*.pgm'))
-        res_frames = sorted(temp_path.glob('res_*.pgm')) if res else []
-        sky_frames = [Path(str(f).replace('obs_', 'sky_').replace('.pgm', '.ppm')) for f in obs_frames]
-        no_frames = len(obs_frames)
-        no_rows = no_frames // no_cols + int(no_frames % no_cols != 0)
-        n_components = 4 if res else 3
-        dd_fits_ppm = current_path / 'waction' / 'temp' / 'dd_fits.ppm'
-        dd_fits_jpg = current_path / 'waction' / 'temp' / '2_dd_fits.jpg'
-        script_lines = []
-        
-        #Stacks columns
-        column_files = []
-        for c in range(no_cols):
-            idxs = range(c * no_rows, min((c + 1) * no_rows, no_frames))
-            flat_files = []
-            for i in idxs:
-                flat_files += [obs_frames[i], fit_frames[i]]
-                if res:
-                    flat_files.append(res_frames[i])
-                flat_files.append(sky_frames[i])
-
-            column_file = temp_path / f'column_{c:02}.ppm'
-            column_files.append(column_file)
-            cmd = utils.ppmstack_cmd_list(flat_files, column_file, no_cols=n_components)
-            script_lines.append(" ".join(cmd))
-
-        #Commands for combine columns side by side and convert to jpg
-        cmd = utils.ppmstack_cmd_list(column_files, dd_fits_ppm, no_cols=no_cols)
-        script_lines.append(" ".join(cmd))
-        cmd = utils.ffmpeg_ppm2jpg_list(dd_fits_ppm, dd_fits_jpg)
-        script_lines.append(" ".join(cmd))
-
-        #Write all commands in a script and run together
-        script_path = temp_path / 'dd_stack.sh'
-        script_path.write_text("\n".join(script_lines) + "\n")
-        with open(temp_path / 'dd_stack.log', 'w') as log:
-            subprocess.run(['bash', str(script_path)], stdout=log,
-                            stderr=subprocess.STDOUT, check=True, cwd='waction')
-
-    #lc and cw can be plotted with functions
-    if 'lightcurve' in set_types:
-        lc_fits = sorted(temp_path.glob("fit_??.dat"))
-        #Create lightcurve plot
-        qp.quick_lightcurves(lc_fits, show=False, save=temp_path / '3_lc_fits.jpg')
-
-    if 'doppler' in set_types:
-        cw_fits = sorted(temp_path.glob("fit_??_??.dat"))
-        #Create plot
-        qp.quick_doppler(cw_fits, show=False, save=temp_path / '4_cw_fits.jpg')
+    # canvas = Image.new('RGB', (width, sum(im.height for im in resized)), 'white')
+    # y = 0
+    # for im in resized:
+    #     canvas.paste(im, (0, y))
+    #     y += im.height
+    # output_name = outdir / f'{identifier}.pdf'
+    # canvas.save(output_name, 'PDF', resolution=72.0)
+    # logger.info(f'Created PDF: {output_name}')
 
     #Resize jpgs
     resized = []
