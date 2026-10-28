@@ -6,7 +6,8 @@ import logging
 from pathlib import Path
 import subprocess
 from .config import logger, error_exit
-from ..plotting import pub_routines as pp
+from ..plotting import lightcurves, doppler, model
+from ..simulation.pub_lightcurve_generator import pub_lightcurve_generator
 from ..obs.obs_io import obsFile
 from ..utils import check_file, check_dir, empty_dir, run_shape
 from ..jinja_env import render_and_compile_pdf
@@ -72,7 +73,7 @@ def write_pub(modfile,outdir,
                     logger.info(f'Plotting {fit.name}')
                     fit_pdf = pub_path / f'CW_fit_{setno:02d}_{frameno:02d}.pdf'
                     pos_pdf = pub_path / f'CW_pos_{setno:02d}_{frameno:02d}.pdf'
-                    pp.pub_doppler(fit, dop_info, fig_title, save=fit_pdf)
+                    doppler.pub_doppler(fit, dop_info, fig_title, save=fit_pdf)
                     subprocess.run(['convert', ppm, pos_pdf], check=True)
 
                     cw_list.append({
@@ -113,7 +114,7 @@ def write_pub(modfile,outdir,
             lam,bet,phi = mod_ss.lam, mod_ss.bet, mod_ss.phi+90
 
             #Create plots and output results dictionary (not done)
-            artificial_lightcurves.pub_lightcurve_generator(pub_path, lc_args.lc_file,
+            pub_lightcurve_generator(pub_path, lc_args.lc_file,
                                                             t0, lam, bet, phi, P,
                                                             FN, FNa, V=V, F=F,
                                                             scattering_law=scattering_law,
@@ -123,7 +124,7 @@ def write_pub(modfile,outdir,
 
             #Combine the figures
             out_stem = f'PubLC_{identifier}'
-            artificial_lightcurves.concat_lc_plots(pub_path,outdir,out_stem)        
+            lightcurves.concat_lc_plots(pub_path,outdir,out_stem)        
     
         if model_args:
         
@@ -142,7 +143,7 @@ def write_pub(modfile,outdir,
             lims = model_args.lims
             
             out_stem = f'{outdir}/PubModel_{identifier}'
-            pp.pub_model(V,F,FN,
+            model.pub_model(V,F,FN,
                         red_list=red_facets,yellow_list=yellow_facets,
                         lims=lims,ticks=ticks,out_stem=out_stem)
 

@@ -4,14 +4,13 @@
 #SHAPE interpolates lightcurve data points from a dense line
 #This script does a sparser line but includes specific lightcurve points
 
-from ..pub_routines import pub_lightcurves
-from ...convinv import read_lctxt
-from .optical_scattering_laws import scattering
-from .self_shadowing import apply_self_shadowing
 import numpy as np
 import trimesh
-from ...cli.config import logger
-
+from ..cli.config import logger
+from ..convinv import read_lctxt
+from ..plotting.lightcurves import pub_lightcurves
+from .optical_scattering_laws import scattering
+from .self_shadowing import apply_self_shadowing
 
 def pub_lightcurve_generator(out_path, lc_file, T0, lam, bet, phi, P, Fn, FNA,
                          V=None, F=None, shadowing=False, 

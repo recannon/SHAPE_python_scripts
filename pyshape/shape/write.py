@@ -1,6 +1,6 @@
-#Last modified by @recannon on 26/10/2026
+#Last modified @recannon 20261028
 
-#Runs write action and compiles output into a single pdf
+#Runs write action and compiles output into a selection of jpgs
 
 import argparse
 import logging
@@ -8,9 +8,11 @@ from pathlib import Path
 import tempfile
 from ..cli.config import logger
 from ..obs.obs_io import obsFile
-from ..plotting import delay_doppler, doppler, lightcurves
 from ..utils import run_shape, check_file
 from .. import log_file
+
+#Lazy so only load the modules relevant to the obs file 
+lazy from ..plotting import delay_doppler, doppler, lightcurves
 
 def run_and_compile_write(wparfile:str|Path, modfile:str|Path, obsfile:str|Path,
                           wpar_logfile:str|Path,

@@ -1,13 +1,15 @@
 #Last modified @recannon 20261028
 
-from astropy.stats import sigma_clip
 import matplotlib.pyplot as plt
 import numpy as np
-import cmasher as cmr
 from ..cli.config import logger
-from matplotlib.ticker import FormatStrFormatter
-from astropy.time import Time
 from pathlib import Path
+
+#Only required for publication quality, so don't load if only using quick
+lazy from astropy.time import Time
+lazy from jinja2 import Environment, FileSystemLoader
+lazy from matplotlib.ticker import FormatStrFormatter
+lazy from ..jinja_env import render_and_compile_pdf
 
 # Colorblind-friendly colors
 CBblue  = np.array([68, 119, 170]) / 255
@@ -122,3 +124,17 @@ def pub_lightcurves(art_lc_data,lc_data,solar_phase_angle,aspect_angle,i,out_pat
 
     logger.debug('Done')
     return 1
+
+def concat_lc_plots(figdir:Path, outdir:Path, pdf_name:str = 'Art_LC_Plots'):
+
+    #Number of lightcurves and their numbers (range)
+    lightcurve_pdfs = sorted(figdir.glob("ArtLC*.pdf"))
+    logger.debug(f'pdf files: \n {lightcurve_pdfs}')
+    n_lightcurves = len(lightcurve_pdfs)
+    lightcurve_nos = list(range(1, n_lightcurves + 1))
+    
+    #Render as pdf
+    render_and_compile_pdf("concat_lc_plots.tex.j2", {"lightcurve_nos": lightcurve_nos},
+                           pdf_name, figdir, outdir)
+    
+    return True

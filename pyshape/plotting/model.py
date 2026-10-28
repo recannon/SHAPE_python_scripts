@@ -1,6 +1,6 @@
-#Last modified by @recannon 20261027
+#Last modified by @recannon 20261028
 
-#20261027 - General tidy up
+#20261028 - General tidy up
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,16 +9,6 @@ from astropy.time import Time
 from astropy.stats import sigma_clip
 from ..cli.config import logger
 from .model.plot_model_projection import plot_model_projection
-
-# Colorblind-friendly colors
-CBblue  = np.array([68, 119, 170]) / 255
-CBred   = np.array([238, 102, 119]) / 255
-CBgreen = np.array([34, 136, 51]) / 255
-CBgrey  = np.array([187, 187, 187]) / 255
-
-# Plot sizes (for fitting 4 to a row, that keeps nice font sizes)
-FIG_HEIGHT = 7
-FIG_WIDHT  = 8.3
 
 #x_label, y_label, invert_x, invert_y
 VIEW_AXES = {

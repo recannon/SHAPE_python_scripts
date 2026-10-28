@@ -11,7 +11,7 @@ import logging
 import numpy as np
 from scipy.interpolate import griddata
 from . import scan_io
-from ..plotting import quick_routines as pq
+from ..plotting import scan
 from ..cli.config import logger, error_exit
 from ..utils import check_dir, check_type
 
@@ -49,7 +49,7 @@ def config_quick_scan(p1: np.array, p2: np.array, chi: np.array,
     minchi = np.nanmin(chi)
     logger.debug(f'Minchi = {minchi}')
 
-    pq.quick_gridscan(p1, p2, chi,
+    scan.quick_gridscan(p1, p2, chi,
                    p1_grid, p2_grid, chi_grid,
                    minchi, maxlevel, cmp, lines=lines,
                    p1_label=p1_label, p2_label=p2_label,

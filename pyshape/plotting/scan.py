@@ -1,4 +1,4 @@
-#Last modified by @recannon 07/01/2026
+#Last modified @recannon 20261028
 
 from astropy.stats import sigma_clip
 import matplotlib.pyplot as plt

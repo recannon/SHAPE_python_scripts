@@ -2,7 +2,6 @@
 14. Harmonic (and vertex?) template don't have meta info
 15. Documentation update
 16. Add delay-Doppler to write_pub (identical functionality to write_quick but with page breaks?)
-17. Deal with DD in write_quick (same as [16.]?)
 20. More tests (fix scan tests, currently broken)
 21. Redo scan.combine to be more generic and cleaner
 22. Update mod.freeze to full parameter access
