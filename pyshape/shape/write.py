@@ -5,12 +5,12 @@
 import argparse
 import logging
 from pathlib import Path
-from ..cli.config import logger
-from .. import utils
-from ..obs.obs_io import obsFile
-from .. import log_file
 import tempfile
+from ..cli.config import logger
+from ..obs.obs_io import obsFile
 from ..plotting import delay_doppler, doppler, lightcurves
+from ..utils import run_shape, check_file
+from .. import log_file
 
 def run_and_compile_write(wparfile:str|Path, modfile:str|Path, obsfile:str|Path,
                           wpar_logfile:str|Path,
@@ -23,7 +23,7 @@ def run_and_compile_write(wparfile:str|Path, modfile:str|Path, obsfile:str|Path,
         
         tmp_path = Path(tmp)
         logger.info('Running write')
-        utils.run_shape(write_inputs, run_dir=tmp_path, out_log=wpar_logfile)
+        run_shape(write_inputs, run_dir=tmp_path, out_log=wpar_logfile)
         
         #Print chisqr. Can treat the wpar file as a log file for this purpose
         chisqr = log_file.read(wpar_logfile)['ALLDATA']
@@ -97,9 +97,9 @@ def validate_args(args):
         logger.debug('Verbose: Set level to DEBUG')
 
     #Check files exist
-    args.wparfile = utils.check_file(args.wparfile)
-    args.modfile = utils.check_file(args.modfile)
-    args.obsfile = utils.check_file(args.obsfile)
+    args.wparfile = check_file(args.wparfile)
+    args.modfile = check_file(args.modfile)
+    args.obsfile = check_file(args.obsfile)
 
     return args
 

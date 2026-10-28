@@ -7,13 +7,12 @@
 import argparse
 import logging
 from pathlib import Path
-from pyshape.cli.config import logger
-from pyshape import utils
 import tempfile
-from ..utils import load_rgb, stack_images
+from ..cli.config import logger
+from ..utils import load_rgb, stack_images, check_file, run_shape
 
 def compile_moments_output(pa_view_files, out_jpg):
-    pa_view_files = sorted(utils.check_file(f) for f in pa_view_files)
+    pa_view_files = sorted(check_file(f) for f in pa_view_files)
     pos_files = [f for f in pa_view_files if 'pos' in f.name]
     neg_files = [f for f in pa_view_files if 'neg' in f.name]
 
@@ -36,7 +35,7 @@ def run_and_compile_moments(mparfile, modfile, obsfile,
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
         logger.info('Running moments')
-        utils.run_shape(moments_inputs, run_dir=tmp_path, out_log=mpar_logfile)
+        run_shape(moments_inputs, run_dir=tmp_path, out_log=mpar_logfile)
         
         #Collage mpar figures
         logger.info('Creating moments jpg')
@@ -74,9 +73,9 @@ def validate_args(args):
         logger.debug('Verbose: Set level to DEBUG')
 
     #Check files exist
-    args.mparfile = utils.check_file(args.mparfile)
-    args.modfile = utils.check_file(args.modfile)
-    args.obsfile = utils.check_file(args.obsfile) if args.obsfile else None
+    args.mparfile = check_file(args.mparfile)
+    args.modfile = check_file(args.modfile)
+    args.obsfile = check_file(args.obsfile) if args.obsfile else None
 
     return args
 
