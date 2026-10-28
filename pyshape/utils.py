@@ -1,16 +1,18 @@
-#Last modified by @recannon 07/10/2026
+#Last modified @recannon 20261028
 
-#07/10/2026 - mpar handling moved out. ffmpeg set to always force overwrite
-#15/09/2026 - mpar and ppm handling functions
-#27/08/2026 - More Documentation
+#20261028 - Added pillow functions to slowly replace ppmstack
+#20261007 - mpar handling moved out. ffmpeg set to always force overwrite
+#20260915 - mpar and ppm handling functions
+#20260827 - More Documentation
 
 #Helper functions for use throughout the scripts
-import tempfile
+
 from astropy.time import Time
 from .cli.config import error_exit
 from pathlib import Path
 from .cli.config import logger
 import subprocess
+from PIL import Image
 
 #===Helper functions for checking input arguments
 def check_type(par,par_name,req_type):
@@ -92,6 +94,26 @@ def ppmstack_cmd_list(files:list[str|Path], out_file:str|Path, no_cols=3):
 
 def ffmpeg_ppm2jpg_list(ppm_file:str|Path,jpg_file:str|Path):
     return ['ffmpeg', '-loglevel', 'error', '-hide_banner', '-y', '-i', str(ppm_file), str(jpg_file)]
+
+#===Uses pillow to stack images (instead of having to use ppm stack and pgm stack)===
+def load_rgb(path):
+    '''Open a .pgm (greyscale) or .ppm (colour) file as an RGB image.'''
+    with Image.open(path) as im:
+        return im.convert('RGB')
+
+def stack_images(images, horizontal:bool):
+    '''Pastes images next to each other (horizontal) or on top of each other.
+    Takes pillow Image objects as inputs, not file paths. Returns a pillow Image object.'''
+    if horizontal:
+        size = (sum(im.width for im in images), max(im.height for im in images))
+    else:
+        size = (max(im.width for im in images), sum(im.height for im in images))
+    canvas = Image.new('RGB', size)
+    pos = 0
+    for im in images:
+        canvas.paste(im, (pos, 0) if horizontal else (0, pos))
+        pos += im.width if horizontal else im.height
+    return canvas
 
 #===Shape time formatting for mod/obs files
 def time_shape2astropy(t: str) -> Time:

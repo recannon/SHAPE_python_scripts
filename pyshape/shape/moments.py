@@ -1,4 +1,6 @@
-#Last modified by @recannon on 26/10/2026
+#Last modified by @recannon on 20261028
+
+#20261028 - Switched to pillow instead of ppmstack and ffmpeg
 
 #Runs moments action and compiles output into a single jpg
 
@@ -8,27 +10,18 @@ from pathlib import Path
 from pyshape.cli.config import logger
 from pyshape import utils
 import tempfile
-import subprocess
+from ..utils import load_rgb, stack_images
 
-def compile_moments_output(pa_view_files, tmp_path, out_jpg, log_file):
+def compile_moments_output(pa_view_files, out_jpg):
     pa_view_files = sorted(utils.check_file(f) for f in pa_view_files)
     pos_files = [f for f in pa_view_files if 'pos' in f.name]
     neg_files = [f for f in pa_view_files if 'neg' in f.name]
-    out_jpg = Path(out_jpg).resolve()
-    log_file = Path(log_file).resolve()
-    temp_ppm = tmp_path / 'pa_views.ppm'
 
-    ppmstack_cmd = utils.ppmstack_cmd_list(pos_files + neg_files, temp_ppm, 3)
-    ffmpeg_cmd = utils.ffmpeg_ppm2jpg_list(temp_ppm, out_jpg)
-    
-    #Writes to same log file as moments action, with a separator
-    with open(log_file, 'a') as log:
-        for cmd in (ppmstack_cmd, ffmpeg_cmd):
-            logger.debug(f'Running: {" ".join(map(str, cmd))}')
-            log.write(f'\n--- {" ".join(map(str, cmd))} ---\n')
-            log.flush()
-            subprocess.run(cmd, cwd=tmp_path, stdout=log,
-                           stderr=subprocess.STDOUT, check=True)
+    #Two horizontal strips, then combine
+    pos_strip = stack_images([load_rgb(f) for f in pos_files], horizontal=True)
+    neg_strip = stack_images([load_rgb(f) for f in neg_files], horizontal=True)
+    stack_images([pos_strip,neg_strip],horizontal=False).save(Path(out_jpg).resolve(), quality=90)
+
     return
 
 def run_and_compile_moments(mparfile, modfile, obsfile,
@@ -48,7 +41,7 @@ def run_and_compile_moments(mparfile, modfile, obsfile,
         #Collage mpar figures
         logger.info('Creating moments jpg')
         pa_files = sorted(tmp_path.glob('pa*'))
-        compile_moments_output(pa_files, tmp_path, figfile, mpar_logfile)
+        compile_moments_output(pa_files, figfile)
     
     return True
 

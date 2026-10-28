@@ -1,25 +1,6 @@
 #Last modified @recannon 202610238
 
-from PIL import Image
-
-def load_rgb(path):
-    """Open a .pgm (greyscale) or .ppm (colour) file as an RGB image."""
-    with Image.open(path) as im:
-        return im.convert('RGB')
-
-def stack_images(images, horizontal:bool):
-    '''Pastes images next to each other (horizontal) or on top of each other.
-    Takes pillow Image objects as inputs, not file paths. Returns a pillow Image object.'''
-    if horizontal:
-        size = (sum(im.width for im in images), max(im.height for im in images))
-    else:
-        size = (max(im.width for im in images), sum(im.height for im in images))
-    canvas = Image.new('RGB', size)
-    pos = 0
-    for im in images:
-        canvas.paste(im, (pos, 0) if horizontal else (0, pos))
-        pos += im.width if horizontal else im.height
-    return canvas
+from ..utils import stack_images, load_rgb
     
 def format_delay_doppler_images(obs_frames, fit_frames, sky_frames,
                                 no_cols, dd_figfile,
