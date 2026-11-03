@@ -1,20 +1,22 @@
 #Last modified by @recannon on 15/08/26 include .obj reading
 #Modified by @recannon on 01/06/2026
 
+#Used for pretty much everything
 import argparse
+from dataclasses import dataclass
 import logging
 from pathlib import Path
 import subprocess
-from .config import logger, error_exit
-from ..plotting import lightcurves, doppler, model
-from ..simulation.pub_lightcurve_generator import pub_lightcurve_generator
 from ..obs.obs_io import obsFile
 from ..utils import check_file, check_dir, empty_dir, run_shape
-from ..jinja_env import render_and_compile_pdf
-from ..mod.mod_io import modFile
-from ..plotting import artificial_lightcurves
-from dataclasses import dataclass
-import trimesh
+from .config import logger, error_exit
+
+#Only used for certain data types, don't load unless required
+lazy from ..plotting import lightcurves, doppler, model
+lazy import trimesh #lc and model (as can take obj as file input type)
+from ..mod.mod_io import modFile #lc and model (if given as shape mod format)
+lazy from ..simulation.pub_lightcurve_generator import pub_lightcurve_generator #lc
+lazy from ..jinja_env import render_and_compile_pdf #lc and cw
 
 def write_pub(modfile,outdir,
               model_args,cw_args,lc_args):
@@ -133,11 +135,11 @@ def write_pub(modfile,outdir,
 
             if model_args.redfile:
                 with open(model_args.redfile) as f:
-                    red_facets = {int(d) for d in f}
+                    red_facets = {int(l.split()[1]) for l in f}
 
             if model_args.yellowfile:
                 with open(model_args.yellowfile) as f:
-                    yellow_facets = {int(d) for d in f}
+                    yellow_facets = {int(l.split()[1]) for l in f}
                     
             ticks= model_args.ticks
             lims = model_args.lims
