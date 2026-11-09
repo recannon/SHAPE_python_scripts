@@ -10,24 +10,24 @@ import subprocess
 from ..obs.obs_io import obsFile
 from ..utils import check_file, check_dir, empty_dir, run_shape
 from .config import logger, error_exit
+import tempfile
 
 #Only used for certain data types, don't load unless required
-lazy from ..plotting import lightcurves, doppler, model
+lazy from ..plotting import lightcurves, doppler, model, delay_doppler
 lazy import trimesh #lc and model (as can take obj as file input type)
-from ..mod.mod_io import modFile #lc and model (if given as shape mod format)
+lazy from ..mod.mod_io import modFile #lc and model (if given as shape mod format)
 lazy from ..simulation.pub_lightcurve_generator import pub_lightcurve_generator #lc
 lazy from ..jinja_env import render_and_compile_pdf #lc and cw
 
+
 def write_pub(modfile,outdir,
-              model_args,cw_args,lc_args):
+              model_args,cw_args,lc_args,dd_args):
     
     #Setting up paths
     current_path = Path.cwd()
     waction_path = current_path / 'waction'
-    temp_path    = waction_path / 'temp'
     pub_path     = waction_path / 'pub'
     #Makes sure waction/temp and waction/pub exist (and by extension waction)
-    temp_path.mkdir(parents=True, exist_ok=True)
     pub_path.mkdir(parents=True, exist_ok=True)
     modfile = Path(modfile).resolve()
 
@@ -35,59 +35,82 @@ def write_pub(modfile,outdir,
     if cw_args:
         obsfile = Path(cw_args.obsfile).resolve()
         wparfile = Path(cw_args.wparfile).resolve()
-        identifier = f'{modfile.stem}__{obsfile.stem}' if modfile.stem != obsfile.stem else modfile.stem
-    else:
-        identifier = f'{modfile.stem}'
+    elif dd_args:
+        obsfile = Path(dd_args.obsfile).resolve()
+    
+    identifier = f'{modfile.stem}'
 
-    #Only doppler call requires a write action
+    #Only doppler and delay-doppler calls requirea write action
     #This is becuase I can't be bothered to simulate the doppler spectrum myself
-    if cw_args:
+    if cw_args or dd_args:
         
-        obs_file = obsFile.from_file(obsfile)
-        obs_sets = obs_file.datasets
-        cw_sets = [o for o in obs_sets if o.set_type == 'doppler']
-        if not cw_sets: #If there aren't any
-            logger.warning('Skipping CWs, none found in obsfile')
-        else:
-            #Empty waction and pub folders (not recursively)
-            empty_dir(temp_path)
-            empty_dir(pub_path)
-            #Run write action for data files
-            run_shape([wparfile, modfile, obsfile],
-                    run_dir=temp_path, out_log=waction_path / f'{identifier}.wpar.log')
+        with tempfile.TemporaryDirectory() as tmp:
             
-            cw_list = []
-            for cw in cw_sets:
-                setno = cw.set_no
-                dop_info = cw.dop_info
+            tmp_path = Path(tmp)
+            logger.debug('Running write')
+            run_shape([wparfile, modfile, obsfile], run_dir=tmp_path, out_log=waction_path / 'write_pub.wpar.log')
+            
+            obs_file = obsFile.from_file(obsfile)
+            obs_sets = obs_file.datasets
+            cw_sets = [o for o in obs_sets if o.set_type == 'doppler']
+            dd_sets = [o for o in obs_sets if o.set_type == 'delay-doppler']
+            
+            if not cw_sets and cw_args: #If there aren't any
+                logger.warning('Skipping CWs, none found in obsfile')
+            else:
+                cw_list = []
+                for cw in cw_sets:
+                    setno = cw.set_no
+                    dop_info = cw.dop_info
 
-                for frameno, frame in enumerate(cw.frames):
-                    #Files (hopefully) created by write
-                    fit = temp_path / f'fit_{setno:02d}_{frameno:02d}.dat'
-                    ppm = temp_path / f'sky_{setno:02d}_{frameno:02d}.ppm'
-                    if not fit.exists():
-                        raise FileNotFoundError(f'Missing {fit}')
-                    if not ppm.exists():
-                        raise FileNotFoundError(f'Missing {ppm}')
+                    for frameno, frame in enumerate(cw.frames):
+                        #Files (hopefully) created by write
+                        fit = tmp_path / f'fit_{setno:02d}_{frameno:02d}.dat'
+                        ppm = tmp_path / f'sky_{setno:02d}_{frameno:02d}.ppm'
+                        if not fit.exists():
+                            raise FileNotFoundError(f'Missing {fit}')
+                        if not ppm.exists():
+                            raise FileNotFoundError(f'Missing {ppm}')
 
-                    fig_title = fr'{len(cw_list)+1:d} $\bullet$ {frame.date.isot.split("T")[0]} $\bullet$ {frame.date.jd:.3f}'
+                        fig_title = fr'{len(cw_list)+1:d} $\bullet$ {frame.date.isot.split("T")[0]} $\bullet$ {frame.date.jd:.3f}'
 
-                    logger.info(f'Plotting {fit.name}')
-                    fit_pdf = pub_path / f'CW_fit_{setno:02d}_{frameno:02d}.pdf'
-                    pos_pdf = pub_path / f'CW_pos_{setno:02d}_{frameno:02d}.pdf'
-                    doppler.pub_doppler(fit, dop_info, fig_title, save=fit_pdf)
-                    subprocess.run(['convert', ppm, pos_pdf], check=True)
+                        logger.info(f'Plotting {fit.name}')
+                        fit_pdf = pub_path / f'CW_fit_{setno:02d}_{frameno:02d}.pdf'
+                        pos_pdf = pub_path / f'CW_pos_{setno:02d}_{frameno:02d}.pdf'
+                        doppler.pub_doppler(fit, dop_info, fig_title, save=fit_pdf)
+                        subprocess.run(['convert', ppm, pos_pdf], check=True)
 
-                    cw_list.append({
-                        'setno': setno,
-                        'frameno': frameno,
-                        'cw_pdf': fit_pdf,
-                        'pos_pdf': pos_pdf,
-                    })
+                        cw_list.append({
+                            'setno': setno,
+                            'frameno': frameno,
+                            'cw_pdf': fit_pdf,
+                            'pos_pdf': pos_pdf,
+                        })
 
-            out_stem = f'PubCW_{identifier}'
-            render_and_compile_pdf('pub_cw_plots.tex.j2', {'cw_list': cw_list},
-                                out_stem, pub_path, outdir)
+                out_stem = f'PubCW_{identifier}'
+                render_and_compile_pdf('pub_cw_plots.tex.j2', {'cw_list': cw_list},
+                                    out_stem, pub_path, outdir)
+                        
+            if not dd_sets and dd_args:
+                logger.warning('Skipping DDs, none found in obsfile')
+            else:
+                obs_frames = sorted(tmp_path.glob('obs_*.pgm'))
+                fit_frames = sorted(tmp_path.glob('fit_*.pgm'))
+                res_frames = sorted(tmp_path.glob('res_*.pgm')) if dd_args.res else []
+                sky_frames = [f.with_name(f.name.replace('obs_', 'sky_')).with_suffix('.ppm') for f in obs_frames]
+                
+                max_images_per_page = 3*dd_args.max_rows
+                for i in range( (len(obs_frames) // max_images_per_page) + 1):
+                    
+                    dd_figfile = f'{outdir}/Pub_DD_{i+1:0>2}.jpg'
+                    
+                    start = i*max_images_per_page
+                    end = start+max_images_per_page
+                    delay_doppler.format_delay_doppler_images(obs_frames[start:end],fit_frames[start:end],sky_frames[start:end],
+                                                                dd_args.no_cols,dd_figfile,res_frames=res_frames[start:end])
+                    
+                    
+                
         
     #Both model and lc_toggle require reading of the modfile, do this together
     if lc_args or model_args:
@@ -149,6 +172,7 @@ def write_pub(modfile,outdir,
                         red_list=red_facets,yellow_list=yellow_facets,
                         lims=lims,ticks=ticks,out_stem=out_stem)
 
+
     return True
 
 #===Functions for parsing below this point===
@@ -166,6 +190,12 @@ class ModelArgs:
     yellowfile: Path
     ticks: float
     lims: float
+@dataclass
+class DDArgs:
+    obsfile: Path
+    no_cols: int
+    res: bool
+    max_rows: int
 
 
 def parse_args():
@@ -179,10 +209,11 @@ def parse_args():
     io_group.add_argument("modfile", type=str, help="model file (compulsory) [.mod; .obs]")
     io_group.add_argument("-o",'--outdir', type=str, default='./PubPlots',
                           help="Directory of pdfs saved. Default ./PubPlots")
+    io_group.add_argument("--obsfile", type=str, help="obsfile (compulsory for cw and dd)")
+
 
     cw_group = parser.add_argument_group('CW plots (-cw)')
     cw_group.add_argument("-cw", action="store_true", help="Plot CW data. modfile must be in SHAPE format.")
-    cw_group.add_argument("--obsfile", type=str, help="obsfile (compulsory)")
     cw_group.add_argument("--wparfile", type=Path, default='./par/wpar',
                           help="wpar file to use. Default cwd/par/wpar")
 
@@ -201,6 +232,14 @@ def parse_args():
                           help="Symmetric location of axis ticks and grid lines")
     mp_group.add_argument("--lims", type=float, default=0.45,
                           help="Symmetric location of axis limits")
+    
+    dd_group = parser.add_argument_group('Delay-Dopler collages (-dd)')
+    dd_group.add_argument("-dd", action="store_true", help="Create delay-Doppler collages")
+    dd_group.add_argument("--no-cols", type=int, default=3, 
+                          help="Number of columns for collage, Default 3")
+    dd_group.add_argument("--res", action="store_true", help='Includes residuals in collage')
+    dd_group.add_argument("--max-rows", type=int, default=12,
+                          help="Max number of rows before page break. Default 12")
 
     return parser.parse_args()
 
@@ -211,23 +250,27 @@ def validate_args(args):
         logger.setLevel(logging.DEBUG)
         logger.debug('Verbose: Set level to DEBUG')
 
-    if not args.lc and not args.cw and not args.mp:
+    if not args.lc and not args.cw and not args.mp and not args.dd:
         error_exit('Must specify which plots to be created')
     else:
         args.modfile = check_file(args.modfile)
 
+    args.lc_args,args.cw_args,args.model_args,args.dd_args = None,None,None,None
         
     #CW checks
-    if args.cw:
+    if args.cw or args.dd:
         if not args.obsfile:
-            error_exit('Must provide obsfile when using -cw')
+            error_exit('Must provide obsfile when using -cw or -dd')
         if str(args.modfile).endswith('.obj'):
-            error_exit('Must use a SHAPE .mod file for cw files')
-        args.obsfile = check_file(args.obsfile)
+            error_exit('Must use a SHAPE .mod file for cw and dd options')
         args.wparfile = check_file(args.wparfile)
-        args.cw_args = CWArgs(obsfile=args.obsfile, wparfile=args.wparfile)
-    else:
-        args.cw_args = None
+        if args.cw:
+            args.obsfile = check_file(args.obsfile)
+            args.cw_args = CWArgs(obsfile=args.obsfile, wparfile=args.wparfile)
+        if args.dd:
+            args.obsfile_ = check_file(args.obsfile)
+            args.dd_args = DDArgs(obsfile=args.obsfile, no_cols=args.no_cols, 
+                                  res=args.res, max_rows=args.max_rows)
 
     #LC checks
     if args.lc:
@@ -235,8 +278,6 @@ def validate_args(args):
             error_exit('Must provide lcfile when using -lc')
         args.lcfile = check_file(args.lcfile)
         args.lc_args = LCArgs(lc_file=args.lcfile)
-    else:
-        args.lc_args = None
 
     #Model checks
     if args.mp:
@@ -246,8 +287,6 @@ def validate_args(args):
             args.yellowfile = check_file(args.yellowfile)
         args.model_args = ModelArgs(redfile=args.redfile, yellowfile=args.yellowfile,
                                     ticks=args.ticks, lims=args.lims)
-    else:
-        args.model_args = None
     
     #Create output directory if doesn't exist.
     args.outdir = check_dir(args.outdir,create=True)
@@ -260,7 +299,7 @@ def main():
     
     logger.info(f"Processing: {args.modfile}")
     write_pub(args.modfile, args.outdir,
-              args.model_args,args.cw_args,args.lc_args)
+              args.model_args,args.cw_args,args.lc_args,args.dd_args)
 
 if __name__ == "__main__":
     main()

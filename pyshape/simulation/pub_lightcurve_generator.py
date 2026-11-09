@@ -60,15 +60,20 @@ def pub_lightcurve_generator(out_path, lc_file, T0, lam, bet, phi, P, Fn, FNA,
         jds_all = np.concatenate([jds_lc,jds_art])
         jds_all_len = len(jds_all)
         
+        #Adjust for Earth/Sun Distance (we simulate lightcurves based on a static target)
+        #Given this treats everything as relative magnitudes, 
+        # this only matters if distance considerably changes within a lightcurve
+        earth_vec = lc_data[:,2:5]
+        sun_vec = lc_data[:,5:8]
+        mags_lc -= 5*np.log10(np.linalg.norm(earth_vec,axis=1)*np.linalg.norm(sun_vec,axis=1))
+        
         #Can swap for non-static geometry?
         # earth_dir = lc_data[:,2:5].T
         # sun_dir   = lc_data[:,5:8].T
-        sun_dir_mean = np.mean(lc_data[:,2:5], axis=0)
-        earth_dir_mean = np.mean(lc_data[:,5:8], axis=0)
-        # earth_dir = np.tile(earth_dir_mean[:, None], (1, jds_all_len))
-        # sun_dir   = np.tile(sun_dir_mean[:, None],   (1, jds_all_len))
-        earth_dir = np.broadcast_to(earth_dir_mean[:, None], (3, jds_all_len))
-        sun_dir   = np.broadcast_to(sun_dir_mean[:, None], (3, jds_all_len))
+        # sun_dir_mean = np.mean(lc_data[:,2:5], axis=0)
+        # earth_dir_mean = np.mean(lc_data[:,5:8], axis=0)
+        earth_dir = np.broadcast_to(np.mean(earth_vec, axis=0)[:, None], (3, jds_all_len))
+        sun_dir   = np.broadcast_to(np.mean(sun_vec, axis=0)[:, None], (3, jds_all_len))
 
         #Normal vectors
         earth_dir_n = earth_dir / np.linalg.norm(earth_dir,axis=0)
