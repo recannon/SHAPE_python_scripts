@@ -1,5 +1,8 @@
-#Last modified by @recannon on 15/08/26 include .obj reading
-#Modified by @recannon on 01/06/2026
+#Last modified by @recannon 20261110
+
+#20261110 - Include delay-Doppler functionality
+#20260815 - Added .obj reading (for lightcurves)
+#20260601
 
 #Used for pretty much everything
 import argparse
