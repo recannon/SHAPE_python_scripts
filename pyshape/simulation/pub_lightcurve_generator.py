@@ -1,4 +1,6 @@
-#Last modified by @recannon 09/01/2026
+#Last modified @recannon 20261110
+
+#20261110 - Removed mesh_extent being calculated and fed into shadowing following update of ray-tracing functions
 
 #This provides different artificial lightcurve data to SHAPE
 #SHAPE interpolates lightcurve data points from a dense line
@@ -32,8 +34,7 @@ def pub_lightcurve_generator(out_path, lc_file, T0, lam, bet, phi, P, Fn, FNA,
         logger.info('Shadowing enabled')
         mesh = trimesh.Trimesh(vertices=V,faces=F,process=False)
         mesh_centers = mesh.triangles_center
-        mesh_extent = np.linalg.norm(mesh.extents)
-        eps = 1e-6 * np.linalg.norm(mesh.extents)
+        eps = 1e-3 * np.linalg.norm(mesh.extents)
         mesh_trace_origins = mesh_centers + eps * Fn
         #^^Offset ray-tracing origins to avoid self-intersection
 
@@ -138,7 +139,7 @@ def pub_lightcurve_generator(out_path, lc_file, T0, lam, bet, phi, P, Fn, FNA,
             params=scattering_params)
 
         if shadowing:
-            weights = apply_self_shadowing(mu,mu0,mesh,mesh_trace_origins,mesh_extent,earth_body,sun_body,weights)
+            weights = apply_self_shadowing(mu,mu0,mesh,mesh_trace_origins,earth_body,sun_body,weights)
 
         #Sum flux values of all (relevant, see above clipping) facets, one value per timestep
         flux = np.sum(FNA[:,None]*weights, axis=0)
