@@ -9,6 +9,8 @@
   {%- for lc in row -%}
     {%- if lc != '' -%}
       \includelc{{ "{%02d}"|format(lc) }}
+    {%- else -%}
+      \hphantom{\includelc{01}}
     {%- endif -%}
   {%- endfor -%}
 }
