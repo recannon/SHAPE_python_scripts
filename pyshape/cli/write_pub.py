@@ -57,7 +57,7 @@ def write_pub(modfile,outdir,
             
             if not cw_sets and cw_args: #If there aren't any
                 logger.warning('Skipping CWs, none found in obsfile')
-            else:
+            elif cw_args:
                 cw_list = []
                 for cw in cw_sets:
                     setno = cw.set_no
@@ -93,7 +93,7 @@ def write_pub(modfile,outdir,
                         
             if not dd_sets and dd_args:
                 logger.warning('Skipping DDs, none found in obsfile')
-            else:
+            elif dd_args:
                 obs_frames = sorted(tmp_path.glob('obs_*.pgm'))
                 fit_frames = sorted(tmp_path.glob('fit_*.pgm'))
                 res_frames = sorted(tmp_path.glob('res_*.pgm')) if dd_args.res else []
