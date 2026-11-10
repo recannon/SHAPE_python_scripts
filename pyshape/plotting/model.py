@@ -1,5 +1,7 @@
-#Last modified by @recannon 20261028
+#Last modified by @recannon 20261110
 
+#20261110 - Restructure so colours can be made of a gravitational potential colour map
+#           Now they are calculated before the plotting routines are called
 #20261028 - General tidy up
 
 from astropy.stats import sigma_clip
@@ -25,7 +27,7 @@ VIEW_AXES = {
 
 def pub_model(vertices,facets,normals,
               out_stem,
-              red_list=None,yellow_list=None,
+              facet_colours, shading_flags,
               lims = 0.6, ticks=0.5, titlesize=35, labelsize=30):
     
     views = ['+Z', '+Y', '+X', '-Z', '-Y', '-X']
@@ -39,7 +41,7 @@ def pub_model(vertices,facets,normals,
             #Create and plot model projection
             ax = plot_model_projection(vertices,facets,normals,
                                     ax,view,
-                                    red_list=red_list,yellow_list=yellow_list)
+                                    facet_colours, shading_flags)
         
             #Then tick formatting!
             ax.tick_params(direction='in')
@@ -80,7 +82,7 @@ DIR_LOOKUP = {
 
 def plot_model_projection(vertices,facets,normals,
                            ax,view,
-                           red_list=None,yellow_list=None):
+                           facet_colours, shading_flags):
 
     #Identical values, for if I decide to add ability to do custom geometries
     light_dir = DIR_LOOKUP[view]
@@ -91,10 +93,10 @@ def plot_model_projection(vertices,facets,normals,
     y = vertices[facets, 1].T
     z = vertices[facets, 2].T
 
-    for n in track(range(len(facets)), description=view):
+    for i in track(range(len(facets)), description=view):
 
         #This facets vertices
-        xn, yn, zn = x[:, n], y[:, n], z[:, n]
+        xn, yn, zn = x[:, i], y[:, i], z[:, i]
         #Drops the 'depth' of each facet (Creates the projection)
         match view:
             case '+Y': verts = list(zip(xn, zn)); zorder =  int(np.max(yn) * 1000)
@@ -105,25 +107,29 @@ def plot_model_projection(vertices,facets,normals,
             case '-Z': verts = list(zip(xn, yn)); zorder = -int(np.min(zn) * 1000)
             case _: raise ValueError(f'Invalid view: {view!r}')
 
-        #Get colour
-        face_colour,edge_colour = facet_lighting(light_dir, view_dir, normals[n], n,
-                                red_facets=red_list,
-                                yellow_facets=yellow_list)
+        #Get colour, will just return facet_colours[i] if shading_flags[i] == 0
+        face_colour = apply_lighting_effects(light_dir, view_dir, normals[i],
+                                            facet_colours[i],shading_flags[i])
 
         #Each pc is only one vertex. Otherwise this can screw with concavities
         pc = PolyCollection([verts], zorder=zorder)
         pc.set_facecolor(face_colour)
-        pc.set_edgecolor(edge_colour)
+        pc.set_edgecolor(face_colour)
         ax.add_collection(pc)
         
     return ax
     
-def facet_lighting(light_dir, view_dir, normals, facet_id,
-                   red_facets=None, yellow_facets=None,
-                   ambient=0.2,
-                   diffuse_strength=0.7,
-                   specular_strength=0.6,
-                   shininess=80):
+    
+def apply_lighting_effects(light_dir, view_dir, normals,
+                           facet_colour, shading_flag,
+                           ambient=0.2,
+                           diffuse_strength=0.7,
+                           specular_strength=0.6,
+                           shininess=80):
+    
+    #Shading flag = 0 for no lighting effects, 1 for grey, and 2 for colour
+    if shading_flag == 0: 
+        return facet_colour
     
     #Check normalised
     light_dir = light_dir / np.linalg.norm(light_dir)
@@ -139,19 +145,11 @@ def facet_lighting(light_dir, view_dir, normals, facet_id,
 
     #Red and yellow tend colour->white rather than black->colour
     white = np.array([1.0, 1.0, 1.0])
-    if red_facets is not None and facet_id in red_facets:
-        bright = np.array([1.0, 0.0, 0.0])  # pure red
-        face_colour = bright + (white - bright) * spec  # white highlight
-        face_colour = np.clip(face_colour, 0, 1)
-    elif yellow_facets is not None and facet_id in yellow_facets:
-        bright = np.array([1.0, 1.0, 0.0])  # pure yellow
-        face_colour = bright + (white - bright) * spec
-        face_colour = np.clip(face_colour, 0, 1)
-    else:
-        base_colour = np.array([0.8, 0.8, 0.8])
-        face_colour = base_colour * intensity
-    
-    # edge_colour = np.array([0.8, 0.8, 0.8]) * intensity
-    edge_colour = face_colour
-    
-    return face_colour, edge_colour
+    #Shading flag = 0 for no lighting effects, 1 for grey, and 2 for colour
+    if shading_flag == 2:
+        facet_colour = facet_colour + (white - facet_colour) * spec  # white highlight
+        facet_colour = np.clip(facet_colour, 0, 1)
+    elif shading_flag == 1:
+        facet_colour = facet_colour * intensity
+        
+    return facet_colour

@@ -1,6 +1,7 @@
 #Last modified by @recannon 20261110
 
-#20261110 - Include delay-Doppler functionality
+#20261110 - Include delay-Doppler functionality. 
+#           Changed model plotting to calculate colours first rather than whilst plotting
 #20260815 - Added .obj reading (for lightcurves)
 #20260601
 
@@ -14,9 +15,10 @@ from ..obs.obs_io import obsFile
 from ..utils import check_file, check_dir, empty_dir, run_shape
 from .config import logger, error_exit
 import tempfile
+import numpy as np
 
 #Only used for certain data types, don't load unless required
-lazy from ..plotting import lightcurves, doppler, model, delay_doppler
+lazy from ..plotting import lightcurves, doppler, delay_doppler, model
 lazy import trimesh #lc and model (as can take obj as file input type)
 lazy from ..mod.mod_io import modFile #lc and model (if given as shape mod format)
 lazy from ..simulation.pub_lightcurve_generator import pub_lightcurve_generator #lc
@@ -162,17 +164,36 @@ def write_pub(modfile,outdir,
             if model_args.redfile:
                 with open(model_args.redfile) as f:
                     red_facets = {int(l.split()[1]) for l in f}
+            else:
+                red_facets = []
 
             if model_args.yellowfile:
                 with open(model_args.yellowfile) as f:
                     yellow_facets = {int(l.split()[1]) for l in f}
+            else:
+                yellow_facets = []
                     
             ticks= model_args.ticks
             lims = model_args.lims
             
+            # Get colour
+            facet_colours = []
+            shading_flags = []
+            for i in range(len(F)):
+                if i in red_facets:
+                    facet_colours.append([1.0, 0.0, 0.0])
+                    shading_flags.append(2)
+                elif i in yellow_facets:
+                    facet_colours.append([1.0, 1.0, 0.0])
+                    shading_flags.append(2)
+                else:
+                    facet_colours.append([0.8,0.8,0.8])
+                    shading_flags.append(1)
+            facet_colours = np.array(facet_colours)
+                
             out_stem = f'{outdir}/PubModel_{identifier}'
             model.pub_model(V,F,FN,
-                        red_list=red_facets,yellow_list=yellow_facets,
+                        facet_colours=facet_colours, shading_flags=shading_flags,
                         lims=lims,ticks=ticks,out_stem=out_stem)
 
 
