@@ -2,10 +2,11 @@
 import trimesh
 import numpy as np
 from ..plotting import model
+from scipy import constants
 
 mesh = trimesh.load('/home/rcannon/Code/Radar/SHAPE/Final_Models/2024on/2024on.obj')
 
-G = 6.67e-11
+G = constants.G
 
 def gravitational_potential(mesh, density):
 

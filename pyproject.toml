@@ -36,6 +36,7 @@ dev = ["pytest"]
 slurm_pshape = "pyshape.cli.slurm_pshape:main"
 write_pub = "pyshape.cli.write_pub:main"
 write_quick = "pyshape.cli.write_quick:main"
+write_gravenv = "pyshape.cli.write_gravenv:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
