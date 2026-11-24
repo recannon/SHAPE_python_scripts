@@ -9,6 +9,7 @@ from astropy.time import Time
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 from mpl_toolkits.mplot3d.art3d import PolyCollection
+from matplotlib import cm
 import numpy as np
 from rich.progress import track
 
@@ -26,9 +27,10 @@ VIEW_AXES = {
 }
 
 def pub_model(vertices,facets,normals,
-              out_stem,
               facet_colours, shading_flags,
-              lims = 0.6, ticks=0.5, titlesize=35, labelsize=30):
+              out_stem,
+              lims = 0.6, ticks=0.5, titlesize=35, labelsize=30,
+              norm=None, cmap=None, cbar_label=None, cbar_params=None):
     
     views = ['+Z', '+Y', '+X', '-Z', '-Y', '-X']
 
@@ -64,7 +66,15 @@ def pub_model(vertices,facets,normals,
             ax.set_ylabel(f"{yl} [km]", fontsize=labelsize)
             if inv_x: ax.invert_xaxis()
             if inv_y: ax.invert_yaxis()
-                    
+        
+        
+        if norm is not None and cmap is not None:
+            sm = cm.ScalarMappable(norm=norm, cmap=cmap)
+            cb = fig.colorbar(sm, ax=axes.ravel(), location='right', 
+                              ticks=np.arange(cbar_params[0], cbar_params[1] + cbar_params[2], cbar_params[2]), 
+                              boundaries=np.linspace(cbar_params[0],cbar_params[1], 33, endpoint=True))
+            cb.set_label(cbar_label)
+        
         fig.tight_layout()
         fig.savefig(f'{out_stem}.pdf', bbox_inches='tight', dpi=300)
         plt.close(fig)
@@ -114,7 +124,10 @@ def plot_model_projection(vertices,facets,normals,
         #Each pc is only one vertex. Otherwise this can screw with concavities
         pc = PolyCollection([verts], zorder=zorder)
         pc.set_facecolor(face_colour)
-        pc.set_edgecolor(face_colour)
+        # pc.set_edgecolor(face_colour)
+        pc.set_edgecolor((0, 0, 0, 0.2))  # 20% opaque black
+        pc.set_linewidth(0.1)
+        
         ax.add_collection(pc)
         
     return ax

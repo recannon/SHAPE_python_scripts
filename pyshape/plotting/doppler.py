@@ -39,7 +39,7 @@ def quick_doppler(fit_files,no_cols=2,sigma_threshold=5,show=True,save=False):
             min_bin = signal_bins.min()
             max_bin = signal_bins.max()
             
-            margin = 10
+            margin = 20
             axs[i].set_xlim(min_bin - margin, max_bin + margin)
         else:
             axs[i].set_xlim(bins[0], bins[-1])  #plots everything if no signal
@@ -59,6 +59,7 @@ def quick_doppler(fit_files,no_cols=2,sigma_threshold=5,show=True,save=False):
 
     return 1
 
+from matplotlib.ticker import MultipleLocator
 
 def pub_doppler(fit_file,dop_info,fig_title,sigma_threshold=5,show=True,save=False):
 
@@ -81,7 +82,7 @@ def pub_doppler(fit_file,dop_info,fig_title,sigma_threshold=5,show=True,save=Fal
     
     _, obs_data, fit_data, res = np.loadtxt(fit_file,unpack=True)
 
-    ax.plot(freq, obs_data, 'o', color=CBred)
+    ax.plot(freq, obs_data, '-', color=CBred)
     ax.plot(freq, fit_data, '-', color='black', lw=0.8)
     ax.set_title(fig_title, fontsize=title_size)
     
@@ -92,15 +93,20 @@ def pub_doppler(fit_file,dop_info,fig_title,sigma_threshold=5,show=True,save=Fal
         signal_freq = freq[signal_mask]
         min_freq = signal_freq.min()
         max_freq = signal_freq.max()
-        margin = 10 * dop_info[1] #10 bins
+        margin = 25 * dop_info[1] #5 bins
         ax.set_xlim(min_freq - margin, max_freq + margin)
     else:
         ax.set_xlim(freq[0], freq[-1])  #plots everything if no signal
 
-    ax.tick_params(direction='in', top=True, right=True, left=True, bottom=True, 
+    ax.tick_params(which='major', direction='in', top=True, right=True, left=True, bottom=True, 
                     width=0.75, length=6, labelsize=label_size, pad=10)
+    ax.tick_params(which='minor', direction='in', top=True, right=True, left=True, bottom=True,
+               width=0.5, length=3)
+    
     ax.set_xlabel('Doppler freq. [Hz]',fontsize=label_size, labelpad=0)
     ax.set_ylabel("Echo Power [St'd devs]", fontsize=label_size, labelpad=0)
+
+    # ax.xaxis.set_minor_locator(MultipleLocator(0.1))
 
     for spine in ax.spines.values():
         spine.set_linewidth(0.75)
