@@ -4,7 +4,7 @@ Python tools and bash utilities for interacting with the SHAPE asteroid/comet mo
 
 ## Required Directory Structure
 
-Your working directory (`scan_dir/`) should follow the structure below:
+The code assumes a working directory (`scan_dir/`) follows the structure below:
 
 ```
 scan_dir/
@@ -55,7 +55,7 @@ a2 will look to run the fit in directory ./subscans/[a2]. Otherwise it will run 
 
 ## Dependencies
 
-- Python ≥ 3.8 and additional packages (`dependencies.txt`)
+- Python ≥ 3.15 and additional packages (`pyproject.toml`). Can be installed with `pip install .`
 - SHAPE modeling software
 - SLURM (for running `launch_fitting.sbatch`)
 - Lines 7, 10, 12 and 13 of `launch_fitting.sbatch` may need to be changed depending on your compiler and number of cores available.
