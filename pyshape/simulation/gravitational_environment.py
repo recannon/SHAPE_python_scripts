@@ -7,7 +7,7 @@ mesh = trimesh.load('/home/rcannon/Code/Radar/SHAPE/Final_Models/2024on/2024on.o
 
 G = 6.67e-11
 
-def gravitational_potential(mesh):
+def gravitational_potential(mesh, density):
 
     V = mesh.vertices
     F = mesh.faces
@@ -88,8 +88,6 @@ def gravitational_potential(mesh):
 
     U = 0.5 * G * density * (edge_term - face_term)
 
-
-
     #Rotation
     period = 6.0162 * 3600                       # s
     omega = 2*np.pi / period                     # rad/s
@@ -106,40 +104,39 @@ def gravitational_potential(mesh):
 
     return U, U_cent
 
-density = 1700
+# density = 1700
 
-mesh.apply_scale(1000)
-U, U_cent = gravitational_potential(mesh)
-mesh.apply_scale(0.001)
+# mesh.apply_scale(1000)
+# U, U_cent = gravitational_potential(mesh)
+# mesh.apply_scale(0.001)
 
 
+# V = mesh.vertices
+# F = mesh.faces
+# FN = mesh.face_normals
 
-V = mesh.vertices
-F = mesh.faces
-FN = mesh.face_normals
+# from matplotlib import colors
+# import matplotlib.pyplot as plt
 
-from matplotlib import colors
-import matplotlib.pyplot as plt
+# U_plot = (-U-U_cent) * 100
 
-U_plot = (-U-U_cent) * 100
+# print(U_plot)
 
-print(U_plot)
+# # min,max = -0.62,-0.47
+# pmin,pmax = U_plot.min(),U_plot.max()
 
-# min,max = -0.62,-0.47
-pmin,pmax = U_plot.min(),U_plot.max()
+# orex = [[0.3843,0.2941,0.6588], [0.3137,0.3725,0.6902], [0.1961,0.4510,0.7216], [0.1451,0.5255,0.7294], [0.0471,0.6000,0.7333], [0.1451,0.6667,0.6980], [0.1922,0.7451,0.6549], [0.3333,0.7843,0.6431], [0.4431,0.8235,0.6353], [0.5490,0.8588,0.6235], [0.6471,0.8902,0.6078], [0.7373,0.9176,0.5882], [0.8196,0.9490,0.5647], [0.8745,0.9647,0.5882], [0.9294,0.9843,0.6118], [0.9647,0.9961,0.6588], [1.0000,1.0000,0.7098], [1.0000,0.9647,0.6510], [1.0000,0.9294,0.5765], [1.0000,0.8784,0.5098], [1.0000,0.8275,0.4471], [1.0000,0.7647,0.3882], [1.0000,0.6941,0.3294], [1.0000,0.6157,0.2902], [1.0000,0.5294,0.2549], [1.0000,0.4510,0.2353], [1.0000,0.3647,0.2118], [0.9765,0.2941,0.2431], [0.9412,0.2235,0.2706], [0.8824,0.1412,0.2745], [0.8235,0.0667,0.2784], [0.7490,0.0353,0.2667]]
+# norm = colors.Normalize(vmin=pmin, vmax=pmax)
+# cmap_orex = colors.ListedColormap(orex)
+# # sm = plt.cm.ScalarMappable(cmap=cmap_orex, norm=norm)
+# cmap = plt.get_cmap(cmap_orex)
 
-orex = [[0.3843,0.2941,0.6588], [0.3137,0.3725,0.6902], [0.1961,0.4510,0.7216], [0.1451,0.5255,0.7294], [0.0471,0.6000,0.7333], [0.1451,0.6667,0.6980], [0.1922,0.7451,0.6549], [0.3333,0.7843,0.6431], [0.4431,0.8235,0.6353], [0.5490,0.8588,0.6235], [0.6471,0.8902,0.6078], [0.7373,0.9176,0.5882], [0.8196,0.9490,0.5647], [0.8745,0.9647,0.5882], [0.9294,0.9843,0.6118], [0.9647,0.9961,0.6588], [1.0000,1.0000,0.7098], [1.0000,0.9647,0.6510], [1.0000,0.9294,0.5765], [1.0000,0.8784,0.5098], [1.0000,0.8275,0.4471], [1.0000,0.7647,0.3882], [1.0000,0.6941,0.3294], [1.0000,0.6157,0.2902], [1.0000,0.5294,0.2549], [1.0000,0.4510,0.2353], [1.0000,0.3647,0.2118], [0.9765,0.2941,0.2431], [0.9412,0.2235,0.2706], [0.8824,0.1412,0.2745], [0.8235,0.0667,0.2784], [0.7490,0.0353,0.2667]]
-norm = colors.Normalize(vmin=pmin, vmax=pmax)
-cmap_orex = colors.ListedColormap(orex)
-# sm = plt.cm.ScalarMappable(cmap=cmap_orex, norm=norm)
-cmap = plt.get_cmap(cmap_orex)
+# facet_colours = cmap(norm(U_plot))[:, :3]            # (Nf, 3) RGB
 
-facet_colours = cmap(norm(U_plot))[:, :3]            # (Nf, 3) RGB
-
-out_stem = '/home/rcannon/Code/Radar/SHAPE/Final_Models/2024on/test_grav_plot'
-lims,ticks = 0.25,0.2
-shading_flags = np.zeros(len(F), dtype=int)
-model.pub_model(V,F,FN,facet_colours,shading_flags,out_stem,
-                lims=lims,ticks=ticks,
-                norm=norm, cmap=cmap, cbar_label='Gravitational Potential [0.01 J/kg]',
-                cbar_params=[pmin,pmax,0.01])
+# out_stem = '/home/rcannon/Code/Radar/SHAPE/Final_Models/2024on/test_grav_plot'
+# lims,ticks = 0.25,0.2
+# shading_flags = np.zeros(len(F), dtype=int)
+# model.pub_model(V,F,FN,facet_colours,shading_flags,out_stem,
+#                 lims=lims,ticks=ticks,
+#                 norm=norm, cmap=cmap, cbar_label='Gravitational Potential [0.01 J/kg]',
+#                 cbar_params=[pmin,pmax,0.01])

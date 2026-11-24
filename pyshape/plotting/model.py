@@ -36,7 +36,7 @@ def pub_model(vertices,facets,normals,
 
     # plt.rcParams.update({'font.size': 30})
     with plt.rc_context({"font.size": 30}):
-        fig, axes = plt.subplots(2, 3, figsize=(30, 16))
+        fig, axes = plt.subplots(2, 3, figsize=(30, 16), constrained_layout=True)
         
         for ax, view in zip(axes.flatten(), views):
             
@@ -75,7 +75,7 @@ def pub_model(vertices,facets,normals,
                               boundaries=np.linspace(cbar_params[0],cbar_params[1], 33, endpoint=True))
             cb.set_label(cbar_label)
         
-        fig.tight_layout()
+        # fig.tight_layout()
         fig.savefig(f'{out_stem}.pdf', bbox_inches='tight', dpi=300)
         plt.close(fig)
         
