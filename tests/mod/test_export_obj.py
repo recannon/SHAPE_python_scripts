@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 import trimesh
-from pyshape.mod.mod_io import modFile
+from pyshape.io.mod_io import modFile
 from pyshape.mod.export_obj import shape2obj
 
 #===Sample files===

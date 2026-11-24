@@ -17,9 +17,9 @@ import subprocess
 from pathlib import Path
 import numpy as np
 from rich.progress import Progress
-from ..mod.mod_io import modFile
+from ..io.mod_io import modFile
 from ..cli.config import logger, error_exit, console
-from . import scan_io
+from ..io import scan_io
 
 def run_grid_scan(args):
         

@@ -3,7 +3,7 @@ from pathlib import Path
 import argparse
 import logging
 from ..cli.config import logger, error_exit
-from .mod_io import modFile
+from ..io.mod_io import modFile
 
 def _moments(V, F):
     '''Volume, centre of mass and second-moment matrix (about origin) of a closed triangulated surface.'''

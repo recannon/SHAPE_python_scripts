@@ -20,7 +20,7 @@ import subprocess
 import numpy as np
 from . import shuffle_vertices
 from ..cli.config import logger, error_exit
-from .mod_io import modFile
+from ..io.mod_io import modFile
 import tempfile
 
 def convert_type(fname,command_info,shuffle,theta,components):

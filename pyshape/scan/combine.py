@@ -12,7 +12,7 @@ import shutil
 from rich.progress import Progress
 from ..cli.config import logger,error_exit,console
 from ..utils import check_dir
-from . import scan_io
+from ..io import scan_io
 
 def combine_gridscan(fit_dirs, out_dir):
     logger.debug(f'Combining gridscans from {fit_dirs}')

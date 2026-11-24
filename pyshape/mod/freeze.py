@@ -26,7 +26,7 @@ import logging
 import numpy as np
 from pathlib import Path
 import re
-from .mod_io import modFile
+from ..io.mod_io import modFile
 from ..cli.config import logger, error_exit
 from ..utils import check_file
 

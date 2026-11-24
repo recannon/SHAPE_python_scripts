@@ -12,7 +12,7 @@ import glob
 import logging
 from pathlib import Path
 import numpy as np
-from . import mod_io
+from ..io import mod_io
 from ..cli.config import logger, error_exit
 
 def shuffle_vertices(fname, reorder=False, rng=None):

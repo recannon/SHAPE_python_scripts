@@ -7,7 +7,7 @@
 #Edits the mask file of delay-Doppler obsfiles (for selected data sets) to keep the vignetting but scale down below the noise threshold
 #Threshold comes from noise limit of 3.66 * np.sqrt(no_looks)
 
-from .obs_io import obsFile
+from ..io.obs_io import obsFile
 import argparse
 from pathlib import Path
 import logging

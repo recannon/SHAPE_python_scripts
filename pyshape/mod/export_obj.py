@@ -3,7 +3,7 @@
 import argparse
 import logging
 from ..cli.config import logger, error_exit
-from .mod_io import modFile
+from ..io.mod_io import modFile
 import trimesh
 from pathlib import Path
 

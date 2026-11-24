@@ -5,7 +5,7 @@ import pytest
 import shutil
 from pathlib import Path
 
-from pyshape.mod.mod_io import modFile
+from pyshape.io.mod_io import modFile
 from pyshape.mod.freeze import freeze_mod
 
 #===Sample files===

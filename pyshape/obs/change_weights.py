@@ -7,7 +7,7 @@
 #python -m change_weights obsfiles dd 0.5 #Sets delay-Doppler weights for files in obsfiles
 #python -m change_weights test.obs lc 100 #Sets lightcurve weights in test.obs
 
-from .obs_io import obsFile
+from ..io.obs_io import obsFile
 import argparse
 from pathlib import Path
 import glob

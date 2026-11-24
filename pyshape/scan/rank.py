@@ -11,7 +11,7 @@
 
 from ..cli.config import logger, error_exit, safe_exit
 from ..utils import check_type
-from .. import log_file
+from ..io import log_io
 from pathlib import Path
 import argparse
 import logging
@@ -23,7 +23,7 @@ def rank(dirname:Path, top:int = 5, chi_type:str = 'ALLDATA', percent:bool = Fal
     results = []
     for log in log_files:
         try:
-            chi_val = log_file.read(log)[chi_type]
+            chi_val = log_io.read(log)[chi_type]
             results.append((chi_val, log))
         except KeyError:
             logger.warning(f"Chi type '{chi_type}' not found in {log}")

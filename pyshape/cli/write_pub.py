@@ -11,7 +11,7 @@ from dataclasses import dataclass
 import logging
 from pathlib import Path
 import subprocess
-from ..obs.obs_io import obsFile
+from ..io.obs_io import obsFile
 from ..utils import check_file, check_dir, empty_dir, run_shape
 from .config import logger, error_exit
 import tempfile
@@ -20,7 +20,7 @@ import numpy as np
 #Only used for certain data types, don't load unless required
 lazy from ..plotting import lightcurves, doppler, delay_doppler, model
 lazy import trimesh #lc and model (as can take obj as file input type)
-lazy from ..mod.mod_io import modFile #lc and model (if given as shape mod format)
+lazy from ..io.mod_io import modFile #lc and model (if given as shape mod format)
 lazy from ..simulation.pub_lightcurve_generator import pub_lightcurve_generator #lc
 lazy from ..jinja_env import render_and_compile_pdf #lc and cw
 

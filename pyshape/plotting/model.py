@@ -14,7 +14,7 @@ import numpy as np
 from rich.progress import track
 
 from ..cli.config import logger
-from ..mod.mod_io import modFile
+from ..io.mod_io import modFile
 
 #x_label, y_label, invert_x, invert_y
 VIEW_AXES = {

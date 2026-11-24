@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 from pyshape.cli.config import logger
 from pyshape.utils import check_file
-from pyshape.mod.mod_io import modFile
+from pyshape.io.mod_io import modFile
 from dataclasses import dataclass
 import trimesh
 import matplotlib.pyplot as plt

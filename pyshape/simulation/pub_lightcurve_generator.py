@@ -9,7 +9,7 @@
 import numpy as np
 import trimesh
 from ..cli.config import logger
-from ..convinv import read_lctxt
+from ..io.convinv_io import read_lctxt
 from ..plotting.lightcurves import pub_lightcurves
 from .optical_scattering_laws import scattering
 from .self_shadowing import apply_self_shadowing

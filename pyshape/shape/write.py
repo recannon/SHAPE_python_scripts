@@ -7,9 +7,9 @@ import logging
 from pathlib import Path
 import tempfile
 from ..cli.config import logger
-from ..obs.obs_io import obsFile
+from ..io.obs_io import obsFile
 from ..utils import run_shape, check_file
-from .. import log_file
+from ..io import log_io
 
 #Lazy so only load the modules relevant to the obs file 
 lazy from ..plotting import delay_doppler, doppler, lightcurves
@@ -28,7 +28,7 @@ def run_and_compile_write(wparfile:str|Path, modfile:str|Path, obsfile:str|Path,
         run_shape(write_inputs, run_dir=tmp_path, out_log=wpar_logfile)
         
         #Print chisqr. Can treat the wpar file as a log file for this purpose
-        chisqr = log_file.read(wpar_logfile)['ALLDATA']
+        chisqr = log_io.read(wpar_logfile)['ALLDATA']
         logger.info(f'Chisqr: {chisqr}')
         
         #Read obsfile to check for which data types are present

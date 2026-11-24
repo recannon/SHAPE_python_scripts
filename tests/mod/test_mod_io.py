@@ -6,7 +6,7 @@ import shutil
 import numpy as np
 from pathlib import Path
 
-from pyshape.mod.mod_io import modFile
+from pyshape.io.mod_io import modFile
 
 #===Sample files===
 

@@ -17,7 +17,7 @@ import numpy as np
 from scipy.interpolate import griddata
 from ..cli.config import logger, error_exit
 from ..utils import check_dir, check_type
-from . import scan_io
+from ..io import scan_io
 
 def pub_gridscan(bet:np.array, lam:np.array, chi:np.array, 
                 cmp_array:list, cmp:str='magma', save=None):
