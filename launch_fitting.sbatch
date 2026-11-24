@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=on-scat
+# SBATCH --job-name=on-scat
 #SBATCH --time=1:00:00               # Time limit in the format hr:min:sec​
 #SBATCH --output=./faction/job_output_%j.log    # Output file (with job ID in the filename)​
 #SBATCH --error=./faction/job_error_%j.log      # Error file (with job ID in the filename)​
