@@ -11,8 +11,13 @@ import subprocess
 from .config import logger, error_exit
 from .. import utils
 from .. import shape
+from PIL import Image
 # from ..shape.moments import run_and_compile_moments 
 # from ..shape.write import run_and_compile_write
+
+#This is a _bit_ dangerous, but the max file size to read in will have been created by you
+#previously when compiling the delay-Doppler images anyway.
+Image.MAX_IMAGE_PIXELS = None
 
 def write_quick(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='.',no_cols=3,res=False):
     """
@@ -61,36 +66,34 @@ def write_quick(modfile,obsfile,mparfile='par/mpar',wparfile='par/wpar',outdir='
                                 dd_no_cols=no_cols, dd_res=res,
                                 dd_figfile=temp_path/'2_dd_fits.jpg', cw_figfile=temp_path/'4_cw_fits.jpg', lc_figfile=temp_path/'3_lc_fits.jpg')
 
-    # from PIL import Image
-
-    # width = 842
-    # resized = []
-    # for jpg in sorted(temp_path.glob('*.jpg')):
-    #     with Image.open(jpg) as im:
-    #         im = im.convert('RGB')
-    #         new_height = round(im.height * width / im.width)
-    #         resized.append(im.resize((width, new_height), Image.Resampling.LANCZOS))
-
-    # canvas = Image.new('RGB', (width, sum(im.height for im in resized)), 'white')
-    # y = 0
-    # for im in resized:
-    #     canvas.paste(im, (0, y))
-    #     y += im.height
-    # output_name = outdir / f'{identifier}.pdf'
-    # canvas.save(output_name, 'PDF', resolution=72.0)
-    # logger.info(f'Created PDF: {output_name}')
-
-    #Resize jpgs
+    width = 842
     resized = []
     for jpg in sorted(temp_path.glob('*.jpg')):
-        out = temp_path / f'resized_{jpg.name}'
-        subprocess.run(['convert', str(jpg), '-resize', '842', str(out)], check=True)
-        resized.append(str(out))
-    #Stack jpg files into a pdf
+        with Image.open(jpg) as im:
+            im = im.convert('RGB')
+            new_height = round(im.height * width / im.width)
+            resized.append(im.resize((width, new_height), Image.Resampling.LANCZOS))
+
+    canvas = Image.new('RGB', (width, sum(im.height for im in resized)), 'white')
+    y = 0
+    for im in resized:
+        canvas.paste(im, (0, y))
+        y += im.height
     output_name = outdir / f'{identifier}.pdf'
-    subprocess.run(['convert', *map(str, resized), '-append', str(temp_path/'resized.jpg')], check=True)
-    subprocess.run(['convert', str(temp_path/'resized.jpg'), str(output_name)], check=True)
+    canvas.save(output_name, 'PDF', resolution=72.0)
     logger.info(f'Created PDF: {output_name}')
+
+    # #Resize jpgs
+    # resized = []
+    # for jpg in sorted(temp_path.glob('*.jpg')):
+    #     out = temp_path / f'resized_{jpg.name}'
+    #     subprocess.run(['convert', str(jpg), '-resize', '842', str(out)], check=True)
+    #     resized.append(str(out))
+    # #Stack jpg files into a pdf
+    # output_name = outdir / f'{identifier}.pdf'
+    # subprocess.run(['convert', *map(str, resized), '-append', str(temp_path/'resized.jpg')], check=True)
+    # subprocess.run(['convert', str(temp_path/'resized.jpg'), str(output_name)], check=True)
+    # logger.info(f'Created PDF: {output_name}')
     
     return True
 
