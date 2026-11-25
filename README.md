@@ -24,14 +24,17 @@ scan_dir/
 
 ## Capabilities
 - Shape file I/O
- - `pyshape.obs.convert_type` can be used to run mkvertmod or mkharmod on many files at once.
+ - `pyshape.mod.convert_type` can be used to run mkvertmod or mkharmod on many files at once.
  - `pyshape.mod.freeze` can freeze/unfreeze components/sections of modfiles on a component basis.
  - `pyshape.mod.shuffle_vertices` will shuffle the vertices of a modfile vertex component.
  - `pyshape.obs.change_weights` can change weights of obsfile datasets on a set-by-set basis.
+ - `pyshape.obs.speckle_mask` directly changes the mask files to cap the signal at the noise threshold
  - Modfile (and to a lesser extent obsfile) information and i/o can be accessed independantly with mod_io and obs_io for use in notebooks/further analysis.
-- Writing and compiling SHAPE fits
+- Writing and compiling SHAPE fits and commands
+ - `slurm_pshape` runs a pshape command as a slurm array job, through a python wrapper.
  - `write_quick` produces a single PDF compiling information on the fits of all data types in the obs file in the model.
  - `write_pub` produces a PDF per data-type, producing publication-ready plots for each type.
+ - `write_gravenv` produces PDF plots of the gravitational environment of an .obj file.
  - Plotting routines can be accessed independantly for use in notebooks etc.
 - Grid scans
  - `pyshape.scan.run_grid` creates and runs a grid of fit actions using launch_fitting.sbatch. If performing a polescan, it will account for spherical coordinates to save computation at the poles.
@@ -45,11 +48,6 @@ scan_dir/
 ## Documentation
 
 - Documentation for python scripts can be with `python -m <script> -h` (e.g. `python -m pyshape.scan.run_grid -h`). There is limited documentation in the code,   `python -m pyshape.scan -h` also works to remind you of the available commands.
-- The other only frequently run script is launch_fitting.sbatch, which can be run as follows:
-```
-sbatch --array=1-{no_files} launch_fitting.sbatch [a2]
-```
-a2 will look to run the fit in directory ./subscans/[a2]. Otherwise it will run in CWD (only really required by run_grid backend)
 
 --
 
@@ -57,9 +55,9 @@ a2 will look to run the fit in directory ./subscans/[a2]. Otherwise it will run 
 
 - Python ≥ 3.15 and additional packages (`pyproject.toml`). Can be installed with `pip install .`
 - SHAPE modeling software
-- SLURM (for running `launch_fitting.sbatch`)
-- Lines 7, 10, 12 and 13 of `launch_fitting.sbatch` may need to be changed depending on your compiler and number of cores available.
+- SLURM
 - ffmpeg
 
 ---
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
