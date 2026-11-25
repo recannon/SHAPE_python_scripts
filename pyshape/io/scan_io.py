@@ -1,6 +1,7 @@
-#Last modified by @recannon 27/08/2026
+#Last modified by @recannon 20261125
 
-#27/08/2026 - More Documentation
+#20261125 - Cleared up error messages
+#20260827 - More (limited) documentation
 
 #Reads in many logfiles at once for plot functions/rank to use
 
@@ -9,35 +10,6 @@ import numpy as np
 from pathlib import Path
 from . import log_io
 from ..cli.config import logger,error_exit
-
-#===Read polescans===
-# def polescan_results(scan_dir):
-
-#     log_file_path = f'{scan_dir}/logfiles/lat*.log'
-#     log_files = sorted(glob.glob(log_file_path))
-#     if len(log_files) == 0:
-#         logger.warning(f'Could not find any polescan log files ({log_file_path})')
-#         return [],[],[]
-#     else:
-#         logger.debug(f'Found {len(log_files)} log files')
-
-#     chi,bet,lam,unreduced,dof = [],[],[],[],[]
-#     for f in log_files:
-#         try:
-#             log_info = log_file.read(f)
-#             chi.append(log_info['ALLDATA'])
-#             # unreduced.append(log_info['unreduced'])
-#             # dof.append(log_info['dof'])
-#             bet.append(int(f[-13:-10]))
-#             lam.append(int(f[-7:-4]))
-#         except:
-#             # chi.append(np.nan)
-#             logger.warning(f'Found NaN chisqr in {f}')
-
-#     chi,bet,lam = np.array(chi),np.array(bet),np.array(lam)
-#     unreduced,dof = np.array(unreduced),np.array(dof)
-
-#     return bet,lam,chi
 
 def scan_results(scan_dir):
     namecores_path = Path(scan_dir) / 'namecores.txt'
@@ -63,7 +35,7 @@ def scan_results(scan_dir):
             p1.append(float(p1_val))
             p2.append(float(p2_val))
         except:
-            logger.warning(f'Found NaN chisqr in {log_path}')
+            logger.warning(f'Cannot find chisqr in {log_path}')
 
     return np.array(p1), np.array(p2), np.array(chi), polescan
 
