@@ -5,10 +5,9 @@
 #Reads in many logfiles at once for plot functions/rank to use
 
 import dataclasses
-import glob
 import numpy as np
 from pathlib import Path
-from .. import log_file
+from . import log_io
 from ..cli.config import logger,error_exit
 
 #===Read polescans===
@@ -59,7 +58,7 @@ def scan_results(scan_dir):
             logger.warning(f'Log file not found: {log_path}')
             continue
         try:
-            log_info = log_file.read(log_path)
+            log_info = log_io.read(log_path)
             chi.append(log_info['ALLDATA'])
             p1.append(float(p1_val))
             p2.append(float(p2_val))

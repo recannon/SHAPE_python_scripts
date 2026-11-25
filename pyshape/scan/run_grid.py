@@ -10,7 +10,6 @@
 #This code is very slow when doing many subscans
 
 import argparse
-from dataclasses import fields
 import logging
 import shutil
 import subprocess
@@ -21,34 +20,40 @@ from ..io.mod_io import modFile
 from ..cli.config import logger, error_exit, console
 from ..io import scan_io
 
-def run_grid_scan(args):
-        
+def run_grid_scan(mod_template,obs_template,
+                  p1,p2,
+                  angle2_range,angle2):
+    
     cwd = Path.cwd()
     
-    if not args.angle2_range:
-        
+    #Create arrays of jobs to be run 
+    #(this can be done without the need for checking if it's even possible)
+    p1_vals,p2_vals,polescan = build_grid(p1,p2)
+    #Check number of jobs to be run
+    no_jobs = len(p1_vals)
+    scan_io.check_no_files(no_jobs)
+
+    if not angle2_range:
+
         Path(f'{cwd}/modfiles').mkdir(exist_ok=True)
         Path(f'{cwd}/obsfiles').mkdir(exist_ok=True)
         Path(f'{cwd}/logfiles').mkdir(exist_ok=True)
 
-        no_files = setup_grid_scan(args.param1, args.param2,
-                                   args.mod_template, args.obs_template,
-                                   cwd,args.angle2)
-        
-        scan_io.check_no_files(no_files)
-
+        make_grid_scan_files(p1,p2,p1_vals,p2_vals,polescan,
+                             mod_template,obs_template,cwd,angle2) 
+    
         script_dir = Path(__file__).resolve().parents[2]
-        subprocess.run(["sbatch", f"--array=1-{no_files}", f'{script_dir}/launch_fitting.sbatch'])
-        logger.info(f'Submitted SLURM array jobs 1-{no_files}')
-
-    elif args.angle2_range:
+        subprocess.run(["sbatch", f"--array=1-{no_jobs}", f'{script_dir}/launch_fitting.sbatch'])
+        logger.info(f'Submitted SLURM array jobs 1-{no_jobs}')
+    
+    elif angle2_range:
         
         #Make subscan folder if doesn't already exist
         Path(f'{cwd}/subscans').mkdir(exist_ok=True)
         #Then empty it from previous scans
         
         #Angle 2 list
-        a2_min,a2_max,a2_step = args.angle2_range.min, args.angle2_range.max, args.angle2_range.step
+        a2_min,a2_max,a2_step = angle2_range.min, angle2_range.max, angle2_range.step
         a2_list = np.arange(a2_min,a2_max+a2_step,a2_step)
         
         #Make directories
@@ -63,44 +68,38 @@ def run_grid_scan(args):
                 Path(f'{subdir}/obsfiles').mkdir(exist_ok=True)
                 Path(f'{subdir}/logfiles').mkdir(exist_ok=True)
 
-                logging.info(f'Creating files in {subdir}')
+                logger.info(f'Creating files in {subdir}')
 
-                no_files = setup_grid_scan(args.param1, args.param2,
-                                    args.mod_template, args.obs_template,
-                                    subdir, a2)  
-                
+                make_grid_scan_files(p1,p2,p1_vals,p2_vals,polescan,
+                                     mod_template,obs_template,subdir,a2) 
+
                 pb.update(task_id=t1,advance=1)         
 
         shutil.copy(f'{subdir}/namecores.txt', f'{cwd}/namecores.txt')
-        scan_io.check_no_files(no_files)
 
         a2_strs = [str(angle) for angle in a2_list]
         script_dir = Path(__file__).resolve().parents[2]
-        subprocess.run(["sbatch", f"--array=1-{no_files}", f'{script_dir}/launch_fitting.sbatch', ' '.join(a2_strs)])
-        logger.info(f'Submitted SLURM array jobs 1-{no_files}')
+        subprocess.run(["sbatch", f"--array=1-{no_jobs}", f'{script_dir}/launch_fitting.sbatch', ' '.join(a2_strs)])
+        logger.info(f'Submitted SLURM array jobs 1-{no_jobs}')
         
-
-    else:
-        error_exit('This message shouldnt appear so its time to cry')
-
     return
 
 #===Pole/Gridscan setup===
-def setup_grid_scan(p1,p2,mod_template,obs_template,outf,angle2=0):
-
+def make_grid_scan_files(p1,p2,
+                         p1_vals,p2_vals,polescan,
+                         mod_template,obs_template,outf,angle2=0):
+    
+    #Read modfile and check parameters can be found
     mod_info = modFile.from_file(mod_template)
-
     components   = mod_info.components
     scattering_laws = mod_info.phot_functions
     spin_state   = mod_info.spinstate
-
     owner_map = {
         'spin': spin_state,
         **{f'shape{i}': comp for i, comp in enumerate(components)},
         **{f'rs{i}': law for i, law in enumerate(scattering_laws.radar)},
         **{f'os{i}': law for i, law in enumerate(scattering_laws.optical)},
     }
-
     p1_owner = owner_map.get(p1.location)
     p2_owner = owner_map.get(p2.location)
 
@@ -108,24 +107,6 @@ def setup_grid_scan(p1,p2,mod_template,obs_template,outf,angle2=0):
         error_exit(f'Unknown target "{p1.location}"')
     if p2_owner is None:
         error_exit(f'Unknown target "{p2.location}"')
-
-    param_names = [p1.name, p2.name]
-
-    #Creates grid of values
-    polescan_location_check = p1.location == 'spin' and p2.location == 'spin'
-    if polescan_location_check and param_names == ['angle1', 'angle0']:
-        p1_vals,p2_vals = create_polescan_lists(p1.min,p1.max,p1.step,p2.min,p2.max,p2.step)
-        polescan = True
-    elif polescan_location_check and param_names == ['angle0','angle1']:
-        p2_vals,p1_vals = create_polescan_lists(p2.min,p2.max,p2.step,p1.min,p1.max,p1.step)
-        polescan = True
-    else:
-        p1_vals = np.arange(p1.min,p1.max+p1.step,p1.step)
-        p2_vals = np.arange(p2.min,p2.max+p2.step,p2.step)
-        P1, P2 = np.meshgrid(p1_vals, p2_vals, indexing='ij')
-        p1_vals = P1.flatten()
-        p2_vals = P2.flatten()
-        polescan = False
     
     with open(f'{outf}/namecores.txt', 'w') as namecores:
         for p1_val, p2_val in zip(p1_vals, p2_vals):
@@ -155,8 +136,28 @@ def setup_grid_scan(p1,p2,mod_template,obs_template,outf,angle2=0):
             new_ModFile.write(f'{outf}/modfiles/{namecore}.mod')
             shutil.copy(obs_template, f'{outf}/obsfiles/{namecore}.obs')
 
-    no_files = len(p1_vals)
-    return no_files
+    return 
+
+def build_grid(p1,p2):
+    param_names = [p1.name, p2.name]
+    
+    #Creates grid of values
+    polescan_location_check = p1.location == 'spin' and p2.location == 'spin'
+    if polescan_location_check and param_names == ['angle1', 'angle0']:
+        p1_vals,p2_vals = create_polescan_lists(p1.min,p1.max,p1.step,p2.min,p2.max,p2.step)
+        polescan = True
+    elif polescan_location_check and param_names == ['angle0','angle1']:
+        p2_vals,p1_vals = create_polescan_lists(p2.min,p2.max,p2.step,p1.min,p1.max,p1.step)
+        polescan = True
+    else:
+        p1_vals = np.arange(p1.min,p1.max+p1.step,p1.step)
+        p2_vals = np.arange(p2.min,p2.max+p2.step,p2.step)
+        P1, P2 = np.meshgrid(p1_vals, p2_vals, indexing='ij')
+        p1_vals = P1.flatten()
+        p2_vals = P2.flatten()
+        polescan = False
+    
+    return p1_vals,p2_vals,polescan
 
 def create_polescan_lists(bet_min,bet_max,bet_step,lam_min,lam_max,lam_step):
     #Bet values can be linear as all lines of longitude are great circles
@@ -305,7 +306,8 @@ def main():
 
     logger.info(f'Using templates: {args.mod_template} and {args.obs_template}')
 
-    run_grid_scan(args)
+    run_grid_scan(args.mod_template,args.obs_template,
+                  args.param1,args.param2,args.angle2_range,args.angle2)
 
     return True
 
