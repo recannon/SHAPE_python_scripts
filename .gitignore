@@ -8,3 +8,4 @@ todo.txt
 monitor_fit.scrontab
 *.egg-info
 .pytest_cache
+**/**_old.*
