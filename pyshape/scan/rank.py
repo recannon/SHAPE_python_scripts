@@ -1,12 +1,13 @@
-#Last modified by @recannon 27/08/2026
+#Last modified by @recannon 20261125
 
-#27/08/2026 - More Documentation
+#20261125 - Fix str/float inputs
+#20260827 - More Documentation
 
 #Ranks log files by chisqr
 #Can be used to delete files below set thresholds
 
-#python -m rank_fits
-#python -m rank_fits --dirname not_logfiles --top 10 --chi-type Doppler
+#python -m pyshape.scan.rank
+#python -m pyshape.scan.rank --dirname not_logfiles --top 10 --chi-type Doppler
 #chi-type must be one of ['ALLDATA','Doppler','delay','lghtcrv']
 
 from ..cli.config import logger, error_exit, safe_exit
@@ -94,7 +95,7 @@ def parse_args():
 
     #Beta and lambda ranges and steps
     parser.add_argument("--dirname", type=str, help="Name of directory of logfiles. Default ./logfiles")
-    parser.add_argument("--top",     type=str, help="How many log files to show from first place. Default: 5")
+    parser.add_argument("--top",   type=float, help="How many log files to show from first place. Default: 5")
     parser.add_argument("--chi-type",type=str, help="Type of chisqr to rank by. Default: ALLDATA")
     parser.add_argument("--delete", action="store_true",
                         help="Will delete any files not with the selection specified")
@@ -128,12 +129,14 @@ def validate_args(args):
         error_exit(f'Chi-type must be one of: {" ".join(ALLOWED_CHI_TYPES)}')
 
     #Number of top files to show
-    if not args.top:        
+    if args.top is None:        
         args.top = 5
     elif args.top == 0:
         error_exit('Cannot show the top 0 files')
     elif args.top == -1:
         args.top = no_files
+    elif args.top < 0:
+        error_exit('--top cannot be negative (except for -1 to show all files)')
     elif not args.percent:
         args.top = check_type(args.top,'--top',int)
     elif args.percent:
