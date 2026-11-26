@@ -1,4 +1,4 @@
-#Last modified by @recannon 20261124
+#Last modified by @recannon 20261126
 
 #Used for pretty much everything
 import argparse
@@ -10,14 +10,10 @@ from .config import logger
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
-
 from ..simulation.gravitational_environment import gravitational_potential_and_slopes
-
 from ..plotting import model
-
-#Only used for certain data types, don't load unless required
-lazy import trimesh #lc and model (as can take obj as file input type)
-lazy from ..io.mod_io import modFile #lc and model (if given as shape mod format)
+import trimesh #lc and model (as can take obj as file input type)
+from ..io.mod_io import modFile #lc and model (if given as shape mod format)
 
 OREX = [[0.3843,0.2941,0.6588], [0.3137,0.3725,0.6902], [0.1961,0.4510,0.7216], [0.1451,0.5255,0.7294], [0.0471,0.6000,0.7333], [0.1451,0.6667,0.6980], [0.1922,0.7451,0.6549], [0.3333,0.7843,0.6431], [0.4431,0.8235,0.6353], [0.5490,0.8588,0.6235], [0.6471,0.8902,0.6078], [0.7373,0.9176,0.5882], [0.8196,0.9490,0.5647], [0.8745,0.9647,0.5882], [0.9294,0.9843,0.6118], [0.9647,0.9961,0.6588], [1.0000,1.0000,0.7098], [1.0000,0.9647,0.6510], [1.0000,0.9294,0.5765], [1.0000,0.8784,0.5098], [1.0000,0.8275,0.4471], [1.0000,0.7647,0.3882], [1.0000,0.6941,0.3294], [1.0000,0.6157,0.2902], [1.0000,0.5294,0.2549], [1.0000,0.4510,0.2353], [1.0000,0.3647,0.2118], [0.9765,0.2941,0.2431], [0.9412,0.2235,0.2706], [0.8824,0.1412,0.2745], [0.8235,0.0667,0.2784], [0.7490,0.0353,0.2667]]
 
