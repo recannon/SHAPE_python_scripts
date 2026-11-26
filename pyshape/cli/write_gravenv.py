@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
 
-from ..simulation.gravitational_environment import gravitational_potential
+from ..simulation.gravitational_environment import gravitational_potential_and_slopes
 
 from ..plotting import model
 
@@ -19,8 +19,11 @@ from ..plotting import model
 lazy import trimesh #lc and model (as can take obj as file input type)
 lazy from ..io.mod_io import modFile #lc and model (if given as shape mod format)
 
+OREX = [[0.3843,0.2941,0.6588], [0.3137,0.3725,0.6902], [0.1961,0.4510,0.7216], [0.1451,0.5255,0.7294], [0.0471,0.6000,0.7333], [0.1451,0.6667,0.6980], [0.1922,0.7451,0.6549], [0.3333,0.7843,0.6431], [0.4431,0.8235,0.6353], [0.5490,0.8588,0.6235], [0.6471,0.8902,0.6078], [0.7373,0.9176,0.5882], [0.8196,0.9490,0.5647], [0.8745,0.9647,0.5882], [0.9294,0.9843,0.6118], [0.9647,0.9961,0.6588], [1.0000,1.0000,0.7098], [1.0000,0.9647,0.6510], [1.0000,0.9294,0.5765], [1.0000,0.8784,0.5098], [1.0000,0.8275,0.4471], [1.0000,0.7647,0.3882], [1.0000,0.6941,0.3294], [1.0000,0.6157,0.2902], [1.0000,0.5294,0.2549], [1.0000,0.4510,0.2353], [1.0000,0.3647,0.2118], [0.9765,0.2941,0.2431], [0.9412,0.2235,0.2706], [0.8824,0.1412,0.2745], [0.8235,0.0667,0.2784], [0.7490,0.0353,0.2667]]
 
-def write_gravenv(modfile,density,outdir,ticks,lims):
+
+def write_gravenv(modfile,density,period,
+                  outdir,ticks,lims,gpot_cbar=None):
     
     #Setting up paths
     current_path = Path.cwd()
@@ -43,25 +46,68 @@ def write_gravenv(modfile,density,outdir,ticks,lims):
         F  = mesh.faces
         FN = mesh.face_normals
         
-    #Calculate U_plot (for Grav potential)
+    print(mesh.center_mass, mesh.vertices.mean(axis=0))
+        
+    #Calculate values
+    logger.info('Calculating gravitational environment')
     mesh.apply_scale(1000)
-    U, U_cent = gravitational_potential(mesh, density)
+    U, U_cent, slopes = gravitational_potential_and_slopes(mesh, density, period)
     mesh.apply_scale(0.001)
-    U_plot = (-U-U_cent) * 100
-    pmin,pmax,pstep = U_plot.min(),U_plot.max(),0.01
-
+    
+    #==Plot GravPot==
+    logger.info('Plotting gravitational potential')
     out_stem = f'{outdir}/PubGravPot_{identifier}'
+    U_plot = (-U-U_cent) * 100
+    
+    #Colour bar
+    if gpot_cbar is None:
+        gpot_cbar = [U_plot.min(),U_plot.max(),0.01]
+    norm = colors.Normalize(vmin=gpot_cbar[0], vmax=gpot_cbar[1])
+    cmap_orex = colors.ListedColormap(OREX)
+    cmap = plt.get_cmap(cmap_orex)
+    facet_colours = cmap(norm(U_plot))[:, :3]            # (Nf, 3) RGB
+    shading_flags = np.zeros(len(F), dtype=int)
+
+    #Plot
+    model.pub_model(V,F,FN,facet_colours,shading_flags,out_stem,
+                    lims=lims,ticks=ticks,
+                    norm=norm, cmap=cmap, cbar_label='Gravitational Potential [0.01 J/kg]',
+                    cbar_params=gpot_cbar)
+    
+    #==Plot GravSlopes==
+    logger.info('Plotting gravitational slopes')
+    out_stem = f'{outdir}/PubGravSlopes_{identifier}'
+    
+    #Colour bar
+    cbar_info = [0,90,15]
+    norm = colors.Normalize(vmin=cbar_info[0], vmax=cbar_info[1])
+    cmap_orex = colors.ListedColormap(OREX)
+    cmap = plt.get_cmap(cmap_orex)
+    facet_colours = cmap(norm(slopes))[:, :3]            # (Nf, 3) RGB
+    shading_flags = np.zeros(len(F), dtype=int)
+    
+    #Plot
+    model.pub_model(V,F,FN,facet_colours,shading_flags,out_stem,
+                    lims=lims,ticks=ticks,
+                    norm=norm, cmap=cmap, cbar_label='Gravitational Slope [degrees]',
+                    cbar_params=cbar_info)
+
+
+def write_gravpot(V,F,FN,
+                  U_plot,cbar_info,
+                  identifier,out_stem,
+                  ticks,lims):
+    
+    pmin,pmax,pstep = cbar_info
     
     #Color map
-    orex = [[0.3843,0.2941,0.6588], [0.3137,0.3725,0.6902], [0.1961,0.4510,0.7216], [0.1451,0.5255,0.7294], [0.0471,0.6000,0.7333], [0.1451,0.6667,0.6980], [0.1922,0.7451,0.6549], [0.3333,0.7843,0.6431], [0.4431,0.8235,0.6353], [0.5490,0.8588,0.6235], [0.6471,0.8902,0.6078], [0.7373,0.9176,0.5882], [0.8196,0.9490,0.5647], [0.8745,0.9647,0.5882], [0.9294,0.9843,0.6118], [0.9647,0.9961,0.6588], [1.0000,1.0000,0.7098], [1.0000,0.9647,0.6510], [1.0000,0.9294,0.5765], [1.0000,0.8784,0.5098], [1.0000,0.8275,0.4471], [1.0000,0.7647,0.3882], [1.0000,0.6941,0.3294], [1.0000,0.6157,0.2902], [1.0000,0.5294,0.2549], [1.0000,0.4510,0.2353], [1.0000,0.3647,0.2118], [0.9765,0.2941,0.2431], [0.9412,0.2235,0.2706], [0.8824,0.1412,0.2745], [0.8235,0.0667,0.2784], [0.7490,0.0353,0.2667]]
     norm = colors.Normalize(vmin=pmin, vmax=pmax)
-    cmap_orex = colors.ListedColormap(orex)
+    cmap_orex = colors.ListedColormap(OREX)
     # sm = plt.cm.ScalarMappable(cmap=cmap_orex, norm=norm)
     cmap = plt.get_cmap(cmap_orex)
 
     facet_colours = cmap(norm(U_plot))[:, :3]            # (Nf, 3) RGB
 
-    out_stem = f'{outdir}/PubGravPot_{identifier}'
     shading_flags = np.zeros(len(F), dtype=int)
     model.pub_model(V,F,FN,facet_colours,shading_flags,out_stem,
                     lims=lims,ticks=ticks,
@@ -70,17 +116,20 @@ def write_gravenv(modfile,density,outdir,ticks,lims):
 
     return True
 
+
 #===Functions for parsing below this point===
 def parse_args():
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description="Creates publication pdfs for gravitational environment and slopes.",
+    parser = argparse.ArgumentParser(description='''Creates publication pdfs for gravitational environment and slopes.
+                                                    This script is very fussy with units!''',
                                      epilog='Saves pdfs as {outdir}/Pub{pubtype}_{identifier}.pdf')
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="Enable verbose output (sets log level to DEBUG)")
 
     io_group = parser.add_argument_group('Inputs')    
-    io_group.add_argument("modfile", type=str, help="model file")
+    io_group.add_argument("modfile", type=str, help="model file (scale of km)")
     io_group.add_argument("density", type=float, help="Density of the object, in SI units")
+    io_group.add_argument("period", type=float, help="Rotation Period of the object, in hours")
     io_group.add_argument("-o",'--outdir', type=str, default='./PubPlots',
                           help="Directory of pdfs saved. Default ./PubPlots")
 
@@ -89,7 +138,8 @@ def parse_args():
                           help="Symmetric location of axis ticks and grid lines")
     plot_group.add_argument("--lims", type=float, default=0.45,
                           help="Symmetric location of axis limits")
-
+    plot_group.add_argument("--gpot-cbar", nargs=3, type=float,
+                            help="Parameters for colour bar for GravPot [min, max, step]")
     
     return parser.parse_args()
 
@@ -110,7 +160,8 @@ def main():
     args = validate_args(args)    
     
     logger.info(f"Processing: {args.modfile}")
-    write_gravenv(args.modfile, args.density, args.outdir, args.ticks, args.lims)
+    write_gravenv(args.modfile, args.density, args.period,
+                  args.outdir, args.ticks, args.lims, args.gpot_cbar)
 
 if __name__ == "__main__":
     main()
