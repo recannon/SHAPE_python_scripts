@@ -93,29 +93,6 @@ def write_gravenv(modfile,density,period,
                     cbar_params=cbar_info)
 
 
-def write_gravpot(V,F,FN,
-                  U_plot,cbar_info,
-                  identifier,out_stem,
-                  ticks,lims):
-    
-    pmin,pmax,pstep = cbar_info
-    
-    #Color map
-    norm = colors.Normalize(vmin=pmin, vmax=pmax)
-    cmap_orex = colors.ListedColormap(OREX)
-    # sm = plt.cm.ScalarMappable(cmap=cmap_orex, norm=norm)
-    cmap = plt.get_cmap(cmap_orex)
-
-    facet_colours = cmap(norm(U_plot))[:, :3]            # (Nf, 3) RGB
-
-    shading_flags = np.zeros(len(F), dtype=int)
-    model.pub_model(V,F,FN,facet_colours,shading_flags,out_stem,
-                    lims=lims,ticks=ticks,
-                    norm=norm, cmap=cmap, cbar_label='Gravitational Potential [0.01 J/kg]',
-                    cbar_params=[pmin,pmax,pstep])
-
-    return True
-
 
 #===Functions for parsing below this point===
 def parse_args():
